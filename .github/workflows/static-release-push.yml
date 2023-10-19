@@ -5,7 +5,7 @@ permissions:
   contents: write
 
 env:
-  OPENSSL_VER: 1.1.1w
+  # OPENSSL_VER: 1.1.1w
   VER: 2.5a1
 
 jobs:
@@ -57,8 +57,7 @@ jobs:
           usesh: true
           prepare: |
             pkg_add curl autoconf-2.71 gcc-11.2.0p3 gmake gtar
-            pkg_add libnet-1.1.6v0 libnids
-            pkg_add openssl-3.0.8
+            pkg_add libnet-1.1.6v0 libnids openssl-3.0.8
 
           run: |
             # curl -SsfL https://www.openssl.org/source/openssl-${OPENSSL_VER:-1.1.1w}.tar.gz | tar -xzf - -C /tmp/
