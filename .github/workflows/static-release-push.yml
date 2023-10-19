@@ -30,7 +30,7 @@ jobs:
             # make install_sw )
             # rm -rf rm -rf /tmp/openssl-${OPENSSL_VER:-1.1.1w} /opt/bin/openssl /opt/bin/c_rehash
             autoconf
-            ./configure --enable-static --with-openssl=/opt
+            ./configure --enable-static #--with-openssl=/opt
             make dsniff
             strip dsniff
             mv dsniff dsniff_${{ env.OS }}-x86_64
@@ -57,10 +57,6 @@ jobs:
           usesh: true
           prepare: |
             pkg_add curl autoconf-2.71 gcc-11.2.0p3 gmake gtar
-            pkg_info -Q gtar
-            pkg_info -Q libnet
-            pkg_info -Q openssl
-            pkg_info -Q libnids
             pkg_add libnet-1.1.6v0 libnids
             pkg_add openssl-3.0.8
 
@@ -71,6 +67,7 @@ jobs:
             # make install_sw )
             # rm -rf rm -rf /tmp/openssl-${OPENSSL_VER:-1.1.1w} /opt/bin/openssl /opt/bin/c_rehash
             export AUTOCONF_VERSION=2.71
+            find /usr -name libnet.a
             autoconf
             ./configure --enable-static #--with-openssl=/opt
             make dsniff
