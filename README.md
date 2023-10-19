@@ -1,23 +1,36 @@
-Resurrection and enhancements Dug's all-time-classic network sniffer;
+Resurrection and enhancements of [Dug Song's](https://en.wikipedia.org/wiki/W00w00) all-time-classic network sniffer:
 
-* Hidden command line options
-* SNI and SSH decoder
-* HTTP parsing improvements.
-* Report every result only once (to fend of fuzzers and brute forcers).
+* Support for hidden command line options (`ENV_ARGS=`).
+* SNI and SSH-banner decoder (`-v`).
+* HTTP parsing improvements & logs Cookies.
+* Anit-Duplicate. Reports every result only once.
+* Stand-alone & static binary (no need for dsniff.magic/dsniff.services)
+* DPI (`-m`). Port agnostic.
 
-Compare both branches: [Diff](https://github.com/hackerschoice/dsniff/compare/orig...main)
+Compare to the [original](https://packages.debian.org/source/unstable/dsniff): [Diff](https://github.com/hackerschoice/dsniff/compare/orig...main)
 
+Run (example):
 ```sh
-export ENV_ARGS="-i eth0 -P -v"
+export ENV_ARGS="-i eth0 -P -v -m" # hide options from the process list
 ./dsniff
 ```
 
----
+The reason why I prefer dsniff over most others:
+1. It detects traffic on any port (like SSH on port 31337).
+2. The results give a quick overview who/where SSL/SSH is used.
+4. It logs Cookies.
 
+Compile:
+```sh
+./configure --enable static && make dsniff
+```
+---
 dsniff-2.3
 ----------
+```
 
 i wrote these tools with honest intentions - to audit my own network,
+                     ^^^^^^^^THC: So did we!
 and to demonstrate the insecurity of cleartext / weakly-encrypted
 network protocols and ad-hoc PKI. please do not abuse this software.
 
@@ -123,6 +136,6 @@ webspy
 	a fun party trick. :-)
 
 -d.
-
+```
 ---
 http://www.monkey.org/~dugsong/
