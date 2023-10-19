@@ -72,7 +72,7 @@ jobs:
             rm -rf rm -rf /tmp/openssl-${OPENSSL_VER:-1.1.1w} /opt/bin/openssl /opt/bin/c_rehash
             export AUTOCONF_VERSION=2.71
             autoconf
-            ./configure --enable-static --prefix=/opt
+            ./configure --enable-static --with-openssl=/opt
             make dsniff
             strip dsniff
             mv dsniff dsniff_${{ env.OS }}-x86_64
