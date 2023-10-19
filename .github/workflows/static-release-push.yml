@@ -60,12 +60,13 @@ jobs:
             pkg_add autoconf-2.71
             pkg_add gcc-11.2.0p3
             pkg_add gmake tar
+            pkg_info -Q tar
             pkg_info -Q libnet
             pkg_info -Q openssl
             pkg_info -Q libnids
             pkg_info -Q libpcap
-            pkg_add libnet libnids libpcap
-            pkg_add openssl
+            pkg_add libnet-1.1 libnids libpcap
+            pkg_add openssl-3.0.8
 
           run: |
             # curl -SsfL https://www.openssl.org/source/openssl-${OPENSSL_VER:-1.1.1w}.tar.gz | tar -xzf - -C /tmp/
@@ -73,6 +74,7 @@ jobs:
             # ./Configure --prefix=/opt no-tests no-dso no-threads no-shared BSD-generic64 && \
             # make install_sw )
             # rm -rf rm -rf /tmp/openssl-${OPENSSL_VER:-1.1.1w} /opt/bin/openssl /opt/bin/c_rehash
+            find /usr -name libpcap.a
             export AUTOCONF_VERSION=2.71
             autoconf
             ./configure --enable-static #--with-openssl=/opt
