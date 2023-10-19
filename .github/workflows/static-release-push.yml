@@ -24,11 +24,11 @@ jobs:
             pkg install -y curl autoconf gcc libnet libnids libpcap
 
           run: |
-            curl -SsfL https://www.openssl.org/source/openssl-${OPENSSL_VER:-1.1.1w}.tar.gz | tar -xzf - -C /tmp/
-            ( cd /tmp/openssl-${OPENSSL_VER:-1.1.1w} && \
-            ./Configure --prefix=/opt no-tests no-dso no-threads no-shared BSD-generic64 && \
-            make install_sw )
-            rm -rf rm -rf /tmp/openssl-${OPENSSL_VER:-1.1.1w} /opt/bin/openssl /opt/bin/c_rehash
+            # curl -SsfL https://www.openssl.org/source/openssl-${OPENSSL_VER:-1.1.1w}.tar.gz | tar -xzf - -C /tmp/
+            # ( cd /tmp/openssl-${OPENSSL_VER:-1.1.1w} && \
+            # ./Configure --prefix=/opt no-tests no-dso no-threads no-shared BSD-generic64 && \
+            # make install_sw )
+            # rm -rf rm -rf /tmp/openssl-${OPENSSL_VER:-1.1.1w} /opt/bin/openssl /opt/bin/c_rehash
             autoconf
             ./configure --enable-static --with-openssl=/opt
             make dsniff
