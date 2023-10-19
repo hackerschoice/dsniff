@@ -1,0 +1,11 @@
+dsniff for Debian
+-----------------
+
+The latest upstream release of dsniff is from 2002.  Notable changes made to
+the Debian version of dsniff include:
+* the -p option was added to support processing already captured traffic (pcap
+  file) in addition to capturing directly from a network interface
+* the -c and -r options were added to arpspoof (see man page for details)
+* small improvements to protocol decoders have been made
+
+ -- Lukas Schwaighofer <lukas@schwaighofer.name>, Wed, 03 May 2017 19:48:27 +0200
