@@ -62,7 +62,9 @@ jobs:
             pkg_add gmake tar
             pkg_info -Q libnet
             pkg_info -Q openssl
-            pkg_add libnet
+            pkg_info -Q libnids
+            pkg_info -Q libpcap
+            pkg_add libnet libnids libpcap
             pkg_add openssl
 
           run: |
