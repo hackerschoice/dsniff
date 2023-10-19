@@ -1,12 +1,14 @@
-Resurrection and enhancements Dug's all-time-classic network sniffer;
+Resurrection and enhancements of Dug Song's all-time-classic network sniffer;
 
-* Hidden command line options
-* SNI and SSH decoder
+* Support for hidden command line options
+* SNI and SSH-banner decoder
 * HTTP parsing improvements.
-* Report every result only once (to fend of fuzzers and brute forcers).
+* Anit-Duplicate. Reports every result only once.
+* Stand-alone static binary (no need for dsniff.magic/dsniff.services)
 
-Compare both branches: [Diff](https://github.com/hackerschoice/dsniff/compare/orig...main)
+Compare to the [original](https://packages.debian.org/source/unstable/dsniff): [Diff](https://github.com/hackerschoice/dsniff/compare/orig...main)
 
+Example:
 ```sh
 export ENV_ARGS="-i eth0 -P -v"
 ./dsniff
@@ -16,6 +18,7 @@ export ENV_ARGS="-i eth0 -P -v"
 
 dsniff-2.3
 ----------
+```
 
 i wrote these tools with honest intentions - to audit my own network,
 and to demonstrate the insecurity of cleartext / weakly-encrypted
@@ -123,6 +126,6 @@ webspy
 	a fun party trick. :-)
 
 -d.
-
+```
 ---
 http://www.monkey.org/~dugsong/
