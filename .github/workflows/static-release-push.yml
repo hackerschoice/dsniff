@@ -31,8 +31,6 @@ jobs:
             rm -rf rm -rf /tmp/openssl-${OPENSSL_VER:-1.1.1w} /opt/bin/openssl /opt/bin/c_rehash
             autoconf
             ./configure --enable-static --with-openssl=/opt
-            cat config.log
-            find /usr -name 'libnet.[ha]'
             make dsniff
             strip dsniff
             mv dsniff dsniff_${{ env.OS }}-x86_64
