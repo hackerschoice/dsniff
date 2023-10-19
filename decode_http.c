@@ -118,7 +118,7 @@ decode_http(u_char *buf, int len, u_char *obuf, int olen)
 		    regcomp(pass_regex, PASS_REGEX, REGEX_FLAGS))
 			errx(1, "regcomp failed");
 	}
-	if ((dc_meta.rlen > 0) && (p = strtok(dc_meta.rbuf, "\r\n"))) {
+	if ((dc_meta.rbuf) && (p = strtok(dc_meta.rbuf, "\r\n"))) {
 		size_t sz = strlen(p);
 		if ((sz > 12) && (p[9] != '2'))
 			is_http_ok = 0;
@@ -142,7 +142,7 @@ decode_http(u_char *buf, int len, u_char *obuf, int olen)
 
 		if ((query = strchr(req, '?')) != NULL)
 			query++;
-		
+
 		while ((p = strtok(NULL, "\r\n")) != NULL) {
 			if (strncasecmp(p, "Authorization: Basic ", 21) == 0) {
 				auth = p;
@@ -225,6 +225,7 @@ decode_http(u_char *buf, int len, u_char *obuf, int olen)
 				p[i] = '\0';
 				buf_putf(&outbuf, " [%s]", p);
 			}
+
 			if (auth) {
 				buf_putf(&outbuf, "\n%s", auth);
 				dc_update(&dc_meta, auth + 21, strlen(auth + 21));

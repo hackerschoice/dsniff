@@ -52,7 +52,7 @@ RANLIB	= @RANLIB@
 
 HDRS	= asn1.h base64.h buf.h decode.h hex.h magic.h options.h \
 	  pathnames.h pcaputil.h record.h rpc.h tcp_raw.h trigger.h \
-	  version.h vroot.h env2argv.h dsniff_services.h dsniff_magic.h \
+	  vroot.h env2argv.h dsniff_services.h dsniff_magic.h \
 	  crc32.h
 
 SRCS	= asn1.c base64.c buf.c hex.c magic.c mount.c pcaputil.c rpc.c \
