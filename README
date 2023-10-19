@@ -1,3 +1,17 @@
+Resurrection and enhancements Dug's all-time-classic network sniffer;
+
+* Hidden command line options
+* SNI and SSH decoder
+* HTTP parsing improvements.
+* Report every result only once (to fend of fuzzers and brute forcers).
+
+Compare both branches: [Diff](https://github.com/hackerschoice/dsniff/compare/orig...main)
+
+```sh
+export ENV_ARGS="-i eth0 -P -v"
+./dsniff
+```
+---
 
 dsniff-2.3
 ----------
