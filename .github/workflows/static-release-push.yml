@@ -39,7 +39,7 @@ jobs:
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: dsniff_*
+          file: dsniff_${{ env.OS }}-*
           overwrite: true
           file_glob: true
           tag: v${{ env.VER }}
@@ -56,16 +56,12 @@ jobs:
         with:
           usesh: true
           prepare: |
-            pkg_add curl
-            pkg_add autoconf-2.71
-            pkg_add gcc-11.2.0p3
-            pkg_add gmake tar
-            pkg_info -Q tar
+            pkg_add curl autoconf-2.71 gcc-11.2.0p3 gmake gtar
+            pkg_info -Q gtar
             pkg_info -Q libnet
             pkg_info -Q openssl
             pkg_info -Q libnids
-            pkg_info -Q libpcap
-            pkg_add libnet-1.1 libnids libpcap
+            pkg_add libnet-1.1.6v0 libnids
             pkg_add openssl-3.0.8
 
           run: |
@@ -74,7 +70,6 @@ jobs:
             # ./Configure --prefix=/opt no-tests no-dso no-threads no-shared BSD-generic64 && \
             # make install_sw )
             # rm -rf rm -rf /tmp/openssl-${OPENSSL_VER:-1.1.1w} /opt/bin/openssl /opt/bin/c_rehash
-            find /usr -name libpcap.a
             export AUTOCONF_VERSION=2.71
             autoconf
             ./configure --enable-static #--with-openssl=/opt
@@ -86,7 +81,7 @@ jobs:
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: dsniff_*
+          file: dsniff_${{ env.OS }}-*
           overwrite: true
           file_glob: true
           tag: v${{ env.VER }}
