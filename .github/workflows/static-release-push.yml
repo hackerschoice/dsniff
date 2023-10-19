@@ -9,27 +9,6 @@ env:
   VER: 2.5a1
 
 jobs:
-  # Create release Tarballs
-  Source:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: dist
-        run: |
-          ./bootstrap
-          ./configure
-          make dist
-
-      - name: Upload dist
-        uses: svenstaro/upload-release-action@v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: gsocket-*.tar.gz
-          # overwrite: true
-          file_glob: true
-          tag: v${{ env.VER }}
-    
   FreeBSD:
     env:
       OS: "freebsd"
@@ -39,6 +18,7 @@ jobs:
       - name: Starting the VM
         uses: vmactions/freebsd-vm@v0
         with:
+          release: 12.3
           usesh: true
           prepare: |
             pkg install -y curl autoconf gcc libnet libnids libpcap
@@ -51,24 +31,17 @@ jobs:
             rm -rf rm -rf /tmp/openssl-${OPENSSL_VER:-1.1.1w} /opt/bin/openssl /opt/bin/c_rehash
             autoconf
             ./configure --enable-static --prefix=/opt
-            make all
+            cat config.log
+            find /usr -name 'libnet.[ha]'
+            make dsniff
             strip dsniff
             mv dsniff dsniff_${{ env.OS }}-x86_64
 
-      - name: Upload gs-netcat to release
+      - name: Upload dsniff to release
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: gs-netcat_*
-          overwrite: true
-          file_glob: true
-          tag: v${{ env.VER }}
-
-      - name: Upload gsocket to release
-        uses: svenstaro/upload-release-action@v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: gsocket_*
+          file: dsniff_*
           overwrite: true
           file_glob: true
           tag: v${{ env.VER }}
@@ -100,7 +73,7 @@ jobs:
             export AUTOCONF_VERSION=2.71
             autoconf
             ./configure --enable-static --prefix=/opt
-            make all
+            make dsniff
             strip dsniff
             mv dsniff dsniff_${{ env.OS }}-x86_64
 

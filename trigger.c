@@ -403,6 +403,7 @@ trigger_tcp_full(struct tuple4 *addr, struct half_stream *hs, struct half_stream
 		dc_meta.rbuf = buddy->data;
 
 	trigger_tcp_half(addr, hs, t);
+	dc_meta.rbuf = NULL;
 	buddy->collect = hs->collect;
 }
 
@@ -520,8 +521,7 @@ trigger_tcp_raw(struct libnet_ipv4_hdr *ip)
 			warnx("trigger_tcp_raw: decoding port %d as %s",
 			      tr.num, t->decode->dc_name);
 		
-		len = t->decode->dc_func(iov->iov_base, iov->iov_len,
-					 obuf, sizeof(obuf));
+		len = dc_call(t->decode, iov->iov_base, iov->iov_len, obuf, sizeof(obuf));
 		
 		if (len > 0) {
 			record(ip->ip_src.s_addr, ip->ip_dst.s_addr,
@@ -554,8 +554,7 @@ trigger_tcp_raw_callback(in_addr_t src, in_addr_t dst,
 			      "decoding port %d as %s",
 			      tr.num, t->decode->dc_name);
 		
-		if ((len = t->decode->dc_func(buf, len,
-					      obuf, sizeof(obuf))) > 0) {
+		if ((len = dc_call(t->decode, buf, len, obuf, sizeof(obuf))) > 0) {
 			record(src, dst, IPPROTO_TCP, sport, dport,
 			       t->decode->dc_name, obuf, len);
 		}

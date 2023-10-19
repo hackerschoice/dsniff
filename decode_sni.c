@@ -8,6 +8,7 @@
 #include <string.h>
 #include <strlcpy.h>
 #include <ctype.h>
+#include <err.h>
 
 #include "options.h"
 #include "decode.h"
@@ -44,10 +45,6 @@ decode_sni(u_char *buf, int len, u_char *obuf, int olen) {
 
 	if (!Opt_verbose)
 		return 0;
-
-	// FILE *fp = fopen("dump.hex", "w");
-	// fwrite(buf, len, 1, fp);
-	// fclose(fp);
 
 	if (len <= sizeof (struct tls_hdr) + sizeof (struct tls_ch) /* + sid_len */ + sizeof (struct tls_ex))
 		return 0;
@@ -91,25 +88,19 @@ decode_sni(u_char *buf, int len, u_char *obuf, int olen) {
 		end = ptr + hls;
 	// Iterate through all TLS extensions until we find SNI.
 	while (1) {
-		fprintf(stderr, "MARK %d\n", __LINE__);
-
 		if (ptr + sizeof (struct tls_ex) + 2 /* SNI List Length */ + 1 /* SNI Type */ >= end)
 			goto err;
-		fprintf(stderr, "MARK %d\n", __LINE__);
 
 		memcpy(&type, ptr, 2);
 		type = htons(type);
-		fprintf(stderr, "type=%x\n", type);
 		if (type != 0) {
 			memcpy(&hls, ptr + 2, 2);
 			hls = htons(hls);
-		fprintf(stderr, "len=%d\n", len);
 			ptr += sizeof (struct tls_ex) + hls;
 			continue;
 		}
 		// SNI
 		ptr += sizeof (struct tls_ex);
-		fprintf(stderr, "MARK %d\n", __LINE__);
 
 		ptr += 2; // List Length.
 		if (ptr >= end)
@@ -122,19 +113,18 @@ decode_sni(u_char *buf, int len, u_char *obuf, int olen) {
 		memcpy(&hls, ptr, 2);
 		hls = htons(hls);
 		ptr += 2; // SN Length
-		fprintf(stderr, "MARK %d\n", __LINE__);
 
 		if (ptr + hls + 1 >= end) // SNI is never the last. Make sure there is \0 for the \0.
 			goto err;
 		snprintf(obuf, olen, "SNI: %s", ascii_string(ptr, hls + 1));
-		fprintf(stderr, "MARK %d '%s'\n", __LINE__, ascii_string(ptr, hls + 1));
 
 		break;
 	}
-		fprintf(stderr, "MARK %d\n", __LINE__);
 
 	return (strlen(obuf));
 err:
+	if (Opt_debug)
+		warnx("TLS 1.2/1.3 without SNI");
 	return 0;
 }
 
