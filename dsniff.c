@@ -28,7 +28,7 @@
 #include "pcaputil.h"
 #include "trigger.h"
 #include "record.h"
-#include "version.h"
+#include "env2argv.h"
 
 #define MAX_LINES	6
 #define MIN_SNAPLEN	1024
@@ -41,12 +41,14 @@ int	Opt_read = 0;
 int	Opt_write = 0;
 int	Opt_snaplen = MIN_SNAPLEN;
 int	Opt_lines = MAX_LINES;
+int Opt_verbose = 0;
+int Opt_show_dups = 0;
 
 static void
 usage(void)
 {
 	fprintf(stderr, "Version: " VERSION "\n"
-		"Usage: dsniff [-cdmn] [-i interface | -p pcapfile] [-s snaplen]\n"
+		"Usage: dsniff [-cdamnPv] [-i interface | -p pcapfile] [-s snaplen]\n"
 		"              [-f services] [-t trigger[,...]] [-r|-w savefile]\n"
 		"              [expression]\n");
 	exit(1);
@@ -142,22 +144,30 @@ static int get_all_ifaces(struct ifreq **ifaces, int *count)
 	return 0;
 }
 
-
-
 int
 main(int argc, char *argv[])
 {
 	extern char *optarg;
 	extern int optind;
-	char *services, *savefile, *triggers;
+	char *services, *savefile, *triggers, *magics;
 	int c;
 
-	services = savefile = triggers = NULL;
+	env2argv(&argc, &argv);
+	services = savefile = triggers = magics = NULL;
 	
-	while ((c = getopt(argc, argv, "cdf:i:mnp:r:s:t:w:h?V")) != -1) {
+	while ((c = getopt(argc, argv, "PvcdaM:f:i:mnp:r:s:t:w:h?V")) != -1) {
 		switch (c) {
+		case 'P':
+			nids_params.promisc = 0;
+			break;
+		case 'v':
+			Opt_verbose = 1;
+			break;
 		case 'c':
 			Opt_client = 1;
+			break;
+		case 'a':
+			Opt_show_dups++;
 			break;
 		case 'd':
 			Opt_debug++;
@@ -165,11 +175,14 @@ main(int argc, char *argv[])
 		case 'f':
 			services = optarg;
 			break;
+		case 'M':
+			magics = optarg;
+			break;
 		case 'i':
 			nids_params.device = optarg;
 			break;
 		case 'm':
-			Opt_magic = 1;
+			Opt_magic++;
 			break;
 		case 'n':
 			Opt_dns = 0;
@@ -187,6 +200,7 @@ main(int argc, char *argv[])
 			break;
 		case 't':
 			triggers = optarg;
+			trigger_init_list(triggers);
 			break;
 		case 'w':
 			Opt_write = 1;
@@ -219,21 +233,22 @@ main(int argc, char *argv[])
 		nids_params.pcap_filter = copy_argv(argv);
 	nids_params.scan_num_hosts = 0;
 	nids_params.syslog = null_syslog;
+	nids_params.n_tcp_streams = 8 * 1024;
+	nids_params.tcp_workarounds = 1;
 	
 	if (!nids_init()) {
 		record_close();
 		errx(1, "nids_init: %s", nids_errbuf);
 	}
-	if (Opt_magic) {
-		trigger_init_magic(DSNIFF_LIBDIR DSNIFF_MAGIC);
+
+	// Only load if triggers are not used.
+	if (triggers == NULL) {
+		if (Opt_magic)
+			trigger_init_magic(magics);
+		// if -m -m then only use MAGIC (and ignoring dsniff.services completely)
+		if ((Opt_magic <= 1) || (services != NULL))
+			trigger_init_services(services);
 	}
-	if (triggers) {
-		trigger_init_list(triggers);
-	}
-	if (services == NULL) {
-		services = DSNIFF_LIBDIR DSNIFF_SERVICES;
-	}
-	trigger_init_services(services);
 	
 	nids_register_ip(trigger_ip);
 	nids_register_ip(trigger_udp);
@@ -264,8 +279,12 @@ main(int argc, char *argv[])
 		}
 	}
 
-	all_local_ipaddrs_chksum_disable();
-	
+	// all_local_ipaddrs_chksum_disable();
+	// In Docker containers the chksum is often wrong even if not send from any
+	// of the local NICs (local to the PHY but not visible by the container)....
+	struct nids_chksum_ctl chksum_conf = { 0, 0, NIDS_DONT_CHKSUM };
+	nids_register_chksum_ctl(&chksum_conf, 1);
+
 	nids_run();
 	
 	/* NOTREACHED */

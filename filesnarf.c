@@ -27,7 +27,6 @@
 #include "pcaputil.h"
 #include "nfs_prot.h"
 #include "rpc.h"
-#include "version.h"
 
 struct myreadargs {
 	char *filename;

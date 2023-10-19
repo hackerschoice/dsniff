@@ -15,7 +15,12 @@
 
 #include <sys/types.h>
 #include <sys/param.h>
+#include <sys/socket.h>
+#ifdef __FreeBSD__
+#include <sys/ethernet.h>
+#endif
 #include <netinet/in.h>
+#include <netinet/if_ether.h>
 
 #include <stdio.h>
 #include <string.h>
@@ -25,7 +30,6 @@
 #include <pcap.h>
 
 #include "arp.h"
-#include "version.h"
 
 extern char *ether_ntoa(struct ether_addr *);
 

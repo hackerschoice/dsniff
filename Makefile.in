@@ -15,13 +15,14 @@ libdir	= $(prefix)/share/dsniff
 sbindir         = @sbindir@
 mandir		= @mandir@
 
+VER=2.5a1
 CC	= @CC@
-CFLAGS	= @CFLAGS@ -DDSNIFF_LIBDIR=\"$(libdir)/\" -I/usr/include/tirpc
+CFLAGS	= @CFLAGS@ -DDSNIFF_LIBDIR=\"$(libdir)/\" -I/usr/include/tirpc -DVERSION=\"$(VER)\"
 CPPFLAGS = @CPPFLAGS@
-LDFLAGS	= @LDFLAGS@
+LDFLAGS	= @LDFLAGS_STATIC@ @LDFLAGS@
 
 PCAPINC = @PCAPINC@
-PCAPLIB = @PCAPLIB@
+PCAPLIB = @PCAPLIB@ @X_IBVERBS_LIB@
 
 LNETINC = @LNETINC@
 LNETLIB = @LNETLIB@
@@ -38,8 +39,9 @@ SSLLIB	= @SSLLIB@
 X11INC	= @X_CFLAGS@
 X11LIB	= @X_LIBS@ @X_PRE_LIBS@ -lXmu -lX11 @X_EXTRA_LIBS@
 
-INCS	= -I. $(NIDSINC) $(PCAPINC) $(LNETINC) $(DBINC) $(SSLINC) $(X11INC) \
-	  -I$(srcdir)/missing
+TIRPCLIB	= @X_TIRPC_LIB@
+
+INCS	= -I. $(NIDSINC) $(PCAPINC) $(LNETINC) $(DBINC) $(SSLINC) $(X11INC) -I$(srcdir)/missing
 LIBS	= @LIBS@ -L$(srcdir) -lmissing
 
 INSTALL	= @INSTALL@
@@ -50,7 +52,8 @@ RANLIB	= @RANLIB@
 
 HDRS	= asn1.h base64.h buf.h decode.h hex.h magic.h options.h \
 	  pathnames.h pcaputil.h record.h rpc.h tcp_raw.h trigger.h \
-	  version.h vroot.h
+	  version.h vroot.h env2argv.h dsniff_services.h dsniff_magic.h \
+	  crc32.h
 
 SRCS	= asn1.c base64.c buf.c hex.c magic.c mount.c pcaputil.c rpc.c \
 	  tcp_raw.c trigger.c record.c dsniff.c decode.c decode_aim.c \
@@ -61,7 +64,11 @@ SRCS	= asn1.c base64.c buf.c hex.c magic.c mount.c pcaputil.c rpc.c \
 	  decode_pop.c decode_portmap.c decode_postgresql.c decode_pptp.c \
 	  decode_rip.c decode_rlogin.c decode_smb.c decode_smtp.c \
 	  decode_sniffer.c decode_snmp.c decode_socks.c decode_tds.c \
-	  decode_telnet.c decode_vrrp.c decode_yp.c decode_x11.c
+	  decode_telnet.c decode_ssh.c decode_sni.c decode_vrrp.c decode_yp.c decode_x11.c \
+	  env2argv.c crc32.c
+
+SRCS_EXTRA	= arpspoof.c
+DIST_EXTRA	= configure.ac configure Makefile.in config.h.in install-sh mount.x nfs_prot.x
 
 GEN	= mount.h mount.c nfs_prot.h nfs_prot.c
 
@@ -107,7 +114,7 @@ libmissing.a: $(LIBOBJS)
 	$(RANLIB) $@
 
 dsniff: $(HDRS) $(SRCS) $(OBJS) libmissing.a
-	$(CC) $(LDFLAGS) -o $@ $(OBJS) $(LIBS) $(NIDSLIB) $(PCAPLIB) $(LNETLIB) $(DBLIB) $(SSLLIB) -ltirpc
+	$(CC) $(LDFLAGS) -o $@ $(OBJS) $(LIBS) $(NIDSLIB) $(PCAPLIB) $(LNETLIB) $(DBLIB) $(SSLLIB) $(TIRPCLIB)
 
 arpspoof: arpspoof.o arp.o libmissing.a
 	$(CC) $(LDFLAGS) -o $@ arpspoof.o arp.o $(LIBS) $(PCAPLIB) $(LNETLIB)
@@ -116,7 +123,7 @@ dnsspoof: dnsspoof.o pcaputil.o libmissing.a
 	$(CC) $(LDFLAGS) -o $@ dnsspoof.o pcaputil.o $(LIBS) $(PCAPLIB) $(LNETLIB)
 
 filesnarf: nfs_prot.o filesnarf.o pcaputil.o rpc.o libmissing.a
-	$(CC) $(LDFLAGS) -o $@ filesnarf.o nfs_prot.o pcaputil.o rpc.o $(LIBS) $(NIDSLIB) $(PCAPLIB) $(LNETLIB) -ltirpc
+	$(CC) $(LDFLAGS) -o $@ filesnarf.o nfs_prot.o pcaputil.o rpc.o $(LIBS) $(NIDSLIB) $(PCAPLIB) $(LNETLIB) $(TIRPCLIB)
 
 macof: macof.o libmissing.a
 	$(CC) $(LDFLAGS) -o $@ macof.o $(LIBS) $(PCAPLIB) $(LNETLIB)
@@ -128,7 +135,7 @@ msgsnarf: msgsnarf.o buf.o pcaputil.o libmissing.a
 	$(CC) $(LDFLAGS) -o $@ msgsnarf.o buf.o pcaputil.o $(LIBS) $(NIDSLIB) $(PCAPLIB) $(LNETLIB)
 
 sshmitm: sshmitm.o buf.o hex.o record.o ssh.o sshcrypto.o libmissing.a
-	$(CC) $(LDFLAGS) -o $@ sshmitm.o buf.o hex.o record.o ssh.o sshcrypto.o $(LIBS) $(LNETLIB) $(DBLIB) $(SSLLIB) -ltirpc
+	$(CC) $(LDFLAGS) -o $@ sshmitm.o buf.o hex.o record.o ssh.o sshcrypto.o $(LIBS) $(LNETLIB) $(DBLIB) $(SSLLIB) $(TIRPCLIB)
 
 sshow: sshow.o pcaputil.o libmissing.a
 	$(CC) $(LDFLAGS) -o $@ sshow.o pcaputil.o $(LIBS) $(NIDSLIB) $(PCAPLIB) $(LNETLIB)
@@ -146,7 +153,7 @@ urlsnarf: urlsnarf.o base64.o buf.o pcaputil.o libmissing.a
 	$(CC) $(LDFLAGS) -o $@ urlsnarf.o base64.o buf.o pcaputil.o $(LIBS) $(NIDSLIB) $(PCAPLIB) $(LNETLIB)
 
 webmitm: webmitm.o base64.o buf.o decode_http.o record.o libmissing.a
-	$(CC) $(LDFLAGS) -o $@ webmitm.o base64.o buf.o decode_http.o record.o $(LIBS) $(LNETLIB) $(DBLIB) $(SSLLIB) -ltirpc
+	$(CC) $(LDFLAGS) -o $@ webmitm.o base64.o buf.o decode_http.o record.o $(LIBS) $(LNETLIB) $(DBLIB) $(SSLLIB) $(TIRPCLIB)
 
 webspy: webspy.o base64.o buf.o remote.o libmissing.a
 	$(CC) $(LDFLAGS) -o $@ webspy.o base64.o buf.o remote.o $(LIBS) $(NIDSLIB) $(PCAPLIB) $(LNETLIB) $(X11LIB)
@@ -170,6 +177,14 @@ install:
 
 clean:
 	rm -f *.o *~ $(GEN) libmissing.a $(PROGS) webmitm.crt
+
+dist:
+	-rm -rf dsniff-$(VER)
+	mkdir -p dsniff-$(VER)/missing/sys
+	cp -a $(SRCS) $(DIST_EXTRA) $(SRCS_EXTRA) $(HDRS) $(CONFIGS) dsniff-$(VER)
+	cp -a missing/*.[ch] dsniff-$(VER)/missing
+	cp -a missing/sys/*.[ch] dsniff-$(VER)/missing/sys
+	tar cfz dsniff-$(VER).tar.gz dsniff-$(VER)
 
 distclean: clean
 	rm -f Makefile config.h config.cache config.log config.status

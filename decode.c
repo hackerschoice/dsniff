@@ -16,10 +16,13 @@
 #include <string.h>
 #include <ctype.h>
 
+#include "options.h"
 #include "decode.h"
+#include "crc32.h"
 
 extern int decode_hex(u_char *, int, u_char *, int);
 extern int decode_ftp(u_char *, int, u_char *, int);
+extern int decode_ssh(u_char *, int, u_char *, int);
 extern int decode_telnet(u_char *, int, u_char *, int);
 extern int decode_smtp(u_char *, int, u_char *, int);
 extern int decode_pptp(u_char *, int, u_char *, int);
@@ -33,6 +36,7 @@ extern int decode_imap(u_char *, int, u_char *, int);
 extern int decode_snmp(u_char *, int, u_char *, int);
 extern int decode_ldap(u_char *, int, u_char *, int);
 extern int decode_mmxp(u_char *, int, u_char *, int);
+extern int decode_sni(u_char *, int, u_char *, int);
 extern int decode_rlogin(u_char *, int, u_char *, int);
 extern int decode_rip(u_char *, int, u_char *, int);
 extern int decode_socks(u_char *, int, u_char *, int);
@@ -57,6 +61,7 @@ extern int decode_yppasswd(u_char *, int, u_char *, int);
 static struct decode decodes[] = {
 	{ "hex",	decode_hex },
 	{ "ftp",	decode_ftp },
+	{ "ssh",    decode_ssh },
 	{ "telnet",	decode_telnet },
 	{ "smtp",	decode_smtp },
 	{ "pptp",	decode_pptp },
@@ -71,6 +76,7 @@ static struct decode decodes[] = {
 	{ "snmp",	decode_snmp },
 	{ "ldap",	decode_ldap },
 	{ "mmxp",	decode_mmxp },
+	{ "https",  decode_sni },
 	{ "rlogin",	decode_rlogin },
 	{ "rip",	decode_rip },
 	{ "socks",	decode_socks },
@@ -93,6 +99,15 @@ static struct decode decodes[] = {
 	{ "yppasswd",	decode_yppasswd },
 	{ NULL }
 };
+
+struct _dc_meta dc_meta; // Globally shared.
+
+void
+dc_update(struct _dc_meta *m, const void *buf, size_t len) {
+	if (Opt_show_dups)
+		return;
+	m->crc = crc32_update(buf, len, m->crc);
+}
 
 struct decode *
 getdecodebyname(const char *name)
@@ -201,3 +216,30 @@ bufbuf(u_char *big, int blen, u_char *little, int llen)
 	 }
 	 return (NULL);
 }
+
+// WARNING: sz must be >= 1
+u_char *
+ascii_string(u_char *buf, int sz) {
+	u_char *end = buf + sz;
+	u_char *ptr = buf;
+
+	while (ptr < end) {
+		if (*ptr == 0x0d)
+			break;
+		if (*ptr == 0x0a)
+			break;
+		if (*ptr == 0x00)
+			break;
+		if (!isascii(*ptr)) {
+			*ptr = '.';
+		}
+		ptr++;
+	}
+	if (ptr >= end)
+		ptr--;
+	if (*ptr != 0x00)
+		*ptr = '\0';
+
+	return buf;
+}
+

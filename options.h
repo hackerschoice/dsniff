@@ -19,6 +19,8 @@ extern int	Opt_read;
 extern int	Opt_write;
 extern int	Opt_snaplen;
 extern int	Opt_lines;
+extern int	Opt_verbose;
+extern int	Opt_show_dups;
 
 #endif /* OPTIONS_H */
 

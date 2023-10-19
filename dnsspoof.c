@@ -27,7 +27,6 @@
 #include <pcap.h>
 
 #include "pcaputil.h"
-#include "version.h"
 
 struct dnsent {
 	char		*name;

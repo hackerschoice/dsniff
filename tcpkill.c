@@ -21,7 +21,6 @@
 #include <pcap.h>
 
 #include "pcaputil.h"
-#include "version.h"
 
 #define DEFAULT_SEVERITY	3
 

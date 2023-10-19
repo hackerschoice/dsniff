@@ -27,7 +27,6 @@
 
 #include "base64.h"
 #include "buf.h"
-#include "version.h"
 
 /* for jwz's remote.c. */
 extern int mozilla_remote_commands (Display *, Window, char **);

@@ -3,6 +3,7 @@
 # Network services, dsniff style
 #
 ftp		21/tcp
+ssh		22/tcp
 telnet		23/tcp
 smtp		25/tcp
 pptp		47/ip
@@ -26,6 +27,7 @@ telnet		261/tcp
 ldap		389/tcp
 mmxp		417/tcp
 mmxp		417/udp
+https		443/tcp
 rlogin		512/tcp
 rlogin		513/tcp
 rlogin		514/tcp

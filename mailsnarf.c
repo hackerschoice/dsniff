@@ -25,7 +25,6 @@
 
 #include "pcaputil.h"
 #include "buf.h"
-#include "version.h"
 
 /* bogus SMTP state machine */
 enum {

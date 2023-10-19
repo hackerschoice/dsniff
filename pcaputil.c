@@ -12,18 +12,22 @@
 #include <sys/types.h>
 #include <sys/ioctl.h>
 
+#if defined(BSD) && !defined(__FreeBSD__)
+# define WITH_BPF   1
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <err.h>
 #include <pcap.h>
-#ifdef BSD
-#include <pcap-int.h>
+#ifdef WITH_BPF
+# include <pcap-int.h>
 #endif
 
 #include "pcaputil.h"
 
-#ifdef BSD
+#ifdef WITH_BPF
 static int
 bpf_immediate(int fd, int on)
 {
@@ -90,7 +94,7 @@ pcap_init_dsniff(char *intf, char *filter, int snaplen)
 		pcap_perror(pd, "pcap_compile");
 		return (NULL);
 	}
-#ifdef BSD
+#ifdef WITH_BPF
 	if (bpf_immediate(pd->fd, 1) < 0) {
 		perror("ioctl");
 		return (NULL);

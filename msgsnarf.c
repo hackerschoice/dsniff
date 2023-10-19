@@ -27,7 +27,6 @@
 
 #include "buf.h"
 #include "decode.h"
-#include "version.h"
 
 struct client_info {
 	char	       *nick;

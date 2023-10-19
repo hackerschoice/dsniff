@@ -11,11 +11,20 @@
 #ifndef DECODE_H
 #define DECODE_H
 
+#include <stdint.h>
+
 typedef int (*decode_func)(u_char *, int, u_char *, int);
 
 struct decode {
 	char	       *dc_name;
 	decode_func	dc_func;
+};
+
+// Meta data for decoded items
+struct _dc_meta {
+	u_char *rbuf;  // reverse connection
+	int rlen;
+	uint32_t crc;
 };
 
 struct decode *getdecodebyname(const char *name);
@@ -42,8 +51,9 @@ struct decode *getdecodebyname(const char *name);
 int	strip_telopts(u_char *buf, int len);
 
 int	strip_lines(char *buf, int max_lines);
-
+void dc_update(struct _dc_meta *m, const void *buf, size_t len);
 int	is_ascii_string(char *buf, int len);
+u_char * ascii_string(u_char *buf, int sz);
 
 u_char *bufbuf(u_char *big, int blen, u_char *little, int llen);
 

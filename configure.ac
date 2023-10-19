@@ -4,9 +4,10 @@ dnl Copyright (c) 2000 Dug Song <dugsong@monkey.org>
 dnl
 dnl $Id: configure.in,v 1.27 2000/12/20 16:31:21 dugsong Exp $
 
-AC_INIT(dsniff.c)
+AC_INIT
+AC_CONFIG_SRCDIR([dsniff.c])
 
-AC_CONFIG_HEADER(config.h)
+AC_CONFIG_HEADERS([config.h])
 
 dnl Initialize prefix.
 if test "$prefix" = "NONE"; then
@@ -20,19 +21,9 @@ AC_PROG_RANLIB
 
 dnl Checks for header files.
 AC_PATH_XTRA
-AC_HEADER_STDC
+
 AC_CHECK_HEADERS(err.h fcntl.h sys/ioctl.h sys/queue.h unistd.h libgen.h net/if_tun.h)
 dnl XXX - Solaris sux.
-AC_MSG_CHECKING(for MIN and MAX in sys/param.h)
-AC_EGREP_CPP(yes, [
-#include <sys/param.h>
-#if defined(MAX) && defined(MIN)
- yes
-#endif
-],
-[ AC_MSG_RESULT(yes); AC_DEFINE(HAVE_MINMAX) ], 
-[ AC_MSG_RESULT(no) ]
-)
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
@@ -43,15 +34,19 @@ AC_CHECK_TYPE(u_int32_t, uint32_t)
 AC_CHECK_TYPE(u_int64_t, uint64_t)
 dnl XXX - Linux sux.
 AC_CHECK_TYPE(in_addr_t, u_int32_t)
-CFLAGS="$CFLAGS -D_BSD_SOURCE"
+CFLAGS="$CFLAGS -D_DEFAULT_SOURCE"
 
 dnl Checks for library functions.
 AC_PROG_GCC_TRADITIONAL
 AC_FUNC_MEMCMP
-AC_TYPE_SIGNAL
+
 AC_FUNC_STRFTIME
 AC_CHECK_FUNCS(gethostname socket strdup strstr)
 AC_CHECK_LIB(rpcsvc, xdr_fhstatus)
+AC_CHECK_LIB([tirpc], [clnt_tli_create], [X_TIRPC_LIB="-ltirpc"]) 
+AC_SUBST(X_TIRPC_LIB)
+AC_CHECK_LIB([ibverbs], [ibv_close_device], [X_IBVERBS_LIB="-libverbs"])
+AC_SUBST(X_IBVERBS_LIB)
 dnl XXX - Solaris sux.
 AC_CHECK_LIB(socket, socket)
 AC_CHECK_LIB(nsl, gethostbyname)
@@ -86,6 +81,12 @@ if test "x$no_x" = "x"; then
    WEBSPY="webspy"; AC_SUBST(WEBSPY)
 fi
 
+AC_MSG_CHECKING([whether to enable static build])
+AC_ARG_ENABLE([static],
+	        [AS_HELP_STRING([--enable-static],[Compile static binary])],
+		[enable_static="yes"; LDFLAGS_STATIC="-static"], [enable_static="no"])
+AC_MSG_RESULT([$enable_static])
+
 dnl Checks for Berkeley DB
 AC_MSG_CHECKING(for Berkeley DB with 1.85 compatibility)
 AC_ARG_WITH(db,
@@ -118,7 +119,7 @@ AC_ARG_WITH(db,
 	DBINC="-I$withval/include"
 	DBLIB="-L$withval/lib -ldb"
      else
-        AC_ERROR(db_185.h or libdb.a not found in $withval or not configured with --enable-compat185)
+        AC_MSG_ERROR(db_185.h or libdb.a not found in $withval or not configured with --enable-compat185)
      fi
      ;;
   esac ],
@@ -154,12 +155,13 @@ AC_ARG_WITH(db,
      fi
   fi
   if test "x$have_db" = "x"; then
-        AC_ERROR(Berkeley DB with 1.85 compatibility not found)
+        AC_MSG_ERROR(Berkeley DB with 1.85 compatibility not found)
   fi
   AC_MSG_RESULT(yes) ]
 )
 AC_SUBST(DBINC)
 AC_SUBST(DBLIB)
+AC_SUBST(LDFLAGS_STATIC)
 
 dnl Checks for libpcap
 AC_MSG_CHECKING(for libpcap)
@@ -184,7 +186,7 @@ AC_ARG_WITH(libpcap,
 	PCAPINC="-I$withval/include"
 	PCAPLIB="-L$withval/lib -lpcap"
      else
-        AC_ERROR(pcap.h, net/bpf.h, or libpcap.a not found in $withval)
+        AC_MSG_ERROR(pcap.h,net/bpf.h,or libpcap.a not found in $withval)
      fi
      ;;
   esac ],
@@ -198,7 +200,7 @@ AC_ARG_WITH(libpcap,
      PCAPLIB="-lpcap"
   else
      AC_MSG_RESULT(no)
-     AC_ERROR(libpcap not found)
+     AC_MSG_ERROR(libpcap not found)
   fi
   AC_MSG_RESULT(yes) ]
 )
@@ -228,7 +230,7 @@ AC_ARG_WITH(libnet,
 	LNETINC="-I$withval/include"
 	LNETLIB="-L$withval/lib -lnet"
      else
-        AC_ERROR(libnet.h or libnet.a not found in $withval)
+        AC_MSG_ERROR(libnet.h or libnet.a not found in $withval)
      fi
      ;;
   esac ],
@@ -241,7 +243,7 @@ AC_ARG_WITH(libnet,
      LNETLIB="-lnet"
   else
      AC_MSG_RESULT(no)
-     AC_ERROR(libnet not found)
+     AC_MSG_ERROR(libnet not found)
   fi
   AC_MSG_RESULT(yes) ]
 )
@@ -269,7 +271,7 @@ AC_ARG_WITH(libnids,
 	NIDSINC="-I$withval/include"
 	NIDSLIB="-L$withval/lib -lnids"
      else
-        AC_ERROR(nids.h or libnids.a not found in $withval)
+        AC_MSG_ERROR(nids.h or libnids.a not found in $withval)
      fi
      ;;
   esac ],
@@ -280,7 +282,7 @@ AC_ARG_WITH(libnids,
      NIDSLIB="-lnids"
   else
      AC_MSG_RESULT(no)
-     AC_ERROR(libnids not found)
+     AC_MSG_ERROR(libnids not found)
   fi
   AC_MSG_RESULT(yes) ]
 )
@@ -288,7 +290,7 @@ save_cppflags="$CPPFLAGS"
 CPPFLAGS="$NIDSINC"
 AC_MSG_CHECKING(whether libnids version is good)
 AC_EGREP_HEADER(pcap_filter, nids.h, AC_MSG_RESULT(yes), 
-   [ AC_MSG_RESULT(no); AC_ERROR(libnids version 1.13 or greater required) ])
+   [ AC_MSG_RESULT(no); AC_MSG_ERROR(libnids version 1.13 or greater required) ])
 CPPFLAGS="$save_cppflags"
 AC_SUBST(NIDSINC)
 AC_SUBST(NIDSLIB)
@@ -315,7 +317,7 @@ AC_ARG_WITH(openssl,
 	SSLINC="-I$withval/include"
 	SSLLIB="-L$withval/lib -lssl -lcrypto"
      else
-        AC_ERROR(ssl.h or libssl.a not found in $withval)
+        AC_MSG_ERROR(ssl.h or libssl.a not found in $withval)
      fi
      WEBMITM="webmitm"
      ;;
@@ -330,7 +332,7 @@ AC_ARG_WITH(openssl,
      SSLLIB="-lssl -lcrypto"
   else
      AC_MSG_RESULT(no)
-     AC_ERROR(OpenSSL not found)
+     AC_MSG_ERROR(OpenSSL not found)
   fi
   AC_MSG_RESULT(yes)
 ]
@@ -338,4 +340,5 @@ AC_ARG_WITH(openssl,
 AC_SUBST(SSLINC)
 AC_SUBST(SSLLIB)
 
-AC_OUTPUT(Makefile)
+AC_CONFIG_FILES([Makefile])
+AC_OUTPUT

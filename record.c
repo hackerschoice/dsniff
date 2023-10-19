@@ -8,11 +8,14 @@
 
 #include "config.h"
 
+#define _GNU_SOURCE  
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <rpc/rpc.h>
 
 #include <stdio.h>
+#include <stdbool.h>
+#include <string.h> 
 #include <time.h>
 #include <md5.h>
 #ifdef HAVE_DB_185_H
@@ -25,6 +28,8 @@
 
 #include "options.h"
 #include "record.h"
+#include "decode.h"
+#include "crc32.h"
 
 struct rec {
 	time_t		time;
@@ -36,7 +41,33 @@ struct rec {
 	struct netobj	name;
 	struct netobj	data;
 };
-	
+
+extern struct _dc_meta dc_meta;
+
+uint32_t dup_table[16 * 1024];
+size_t dup_idx;
+
+static bool
+dupdb_hit(uint32_t crc) {
+	if (memmem(dup_table, sizeof dup_table, &crc, sizeof crc) == NULL)
+		return false; // FALSE
+	return true;
+}
+
+static void
+dupdb_add(uint32_t crc) {
+	dup_table[dup_idx++] = crc;
+	dup_idx = dup_idx % (sizeof dup_table / sizeof *dup_table);
+}
+
+static bool
+dupdb_is_new(uint32_t crc) {
+	if (dupdb_hit(crc))
+		return false; // exists already
+	dupdb_add(crc);
+	return true;
+}
+
 static DB *db;
 
 static int
@@ -79,8 +110,8 @@ record_print(struct rec *rec)
 	printf("-----------------\n");
 	printf("%s %s %s%s%s -> %s%s%s (%.*s)\n",
 	       tstr, protop,
-	       srcp, rec->sport ? "." : "", rec->sport ? spstr : "",
-	       dstp, rec->dport ? "." : "", rec->dport ? dpstr : "",
+	       srcp, rec->sport ? ":" : "", rec->sport ? spstr : "",
+	       dstp, rec->dport ? ":" : "", rec->dport ? dpstr : "",
 	       (int) rec->name.n_len, rec->name.n_bytes);
 
 	fwrite(rec->data.n_bytes, 1, rec->data.n_len, stdout);
@@ -178,6 +209,21 @@ record(in_addr_t src, in_addr_t dst, int proto, u_short sport, u_short dport,
        char *name, u_char *buf, int len)
 {
 	struct rec rec;
+	uint32_t crc;
+
+	if (!Opt_show_dups) {
+		// Check for duplicates.
+		crc = dc_meta.crc;
+		// Add entire buffer unless decodeing function already added 'uniq' items.
+		if (crc == CRC32_INITIAL_STATE)
+			crc = crc32_update(buf, len, crc);
+		crc = crc32_update(&src, sizeof src, crc);
+		crc = crc32_update(&dst, sizeof dst, crc);
+		crc = crc32_update(&dport, sizeof dport, crc);
+
+		if (!dupdb_is_new(crc))
+			return 1;
+	}
 
 	rec.time = time(NULL);
 	

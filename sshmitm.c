@@ -30,7 +30,6 @@
 #include "record.h"
 #include "sshcrypto.h"
 #include "ssh.h"
-#include "version.h"
 
 int	 Opt_debug = 0;
 int	 Opt_interact = 0;

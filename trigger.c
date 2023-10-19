@@ -24,6 +24,8 @@
 #include "record.h"
 #include "tcp_raw.h"
 #include "trigger.h"
+#include "crc32.h"
+#include "dsniff_services.h"
 
 struct trigger {
 	int num;
@@ -41,6 +43,8 @@ static u_int		tcp_cnt = 0;
 static u_int		rpc_cnt = 0;
 
 static char		obuf[4096];
+
+extern struct _dc_meta dc_meta;
 
 static int
 trigger_compare(const void *a, const void *b)
@@ -274,7 +278,13 @@ trigger_dump(void)
 	}
 	fclose(f);
 }
-	
+
+static int
+dc_call(struct decode *dc, u_char *buf, int len, u_char *obuf, int olen) {
+	dc_meta.crc = crc32_update(NULL, 0, CRC32_INITIAL);
+	return dc->dc_func(buf, len, obuf, olen);
+}
+
 void
 trigger_ip(struct libnet_ipv4_hdr *ip)
 {
@@ -297,7 +307,7 @@ trigger_ip(struct libnet_ipv4_hdr *ip)
 		warnx("trigger_ip: decoding proto %d as %s",
 		      tr.num, t->decode->dc_name);
 	
-	if ((len = t->decode->dc_func(buf, len, obuf, sizeof(obuf))) > 0) {
+	if ((len = dc_call(t->decode, buf, len, obuf, sizeof(obuf))) > 0) {
 		record(ip->ip_src.s_addr, ip->ip_dst.s_addr, ip->ip_p,
 		       0, 0, t->decode->dc_name, obuf, len);
 	}		
@@ -343,12 +353,13 @@ trigger_udp(struct libnet_ipv4_hdr *ip)
 		warnx("trigger_udp: decoding port %d as %s",
 		      tr.num, t->decode->dc_name);
 	
-	if ((len = t->decode->dc_func(buf, len, obuf, sizeof(obuf))) > 0) {
+	if ((len = dc_call(t->decode, buf, len, obuf, sizeof(obuf))) > 0) {
 		record(ip->ip_src.s_addr, ip->ip_dst.s_addr, IPPROTO_UDP,
 		       ntohs(udp->uh_sport), ntohs(udp->uh_dport),
 		       t->decode->dc_name, obuf, len);
 	}
 }
+
 
 static void
 trigger_tcp_half(struct tuple4 *addr, struct half_stream *hs,
@@ -374,8 +385,7 @@ trigger_tcp_half(struct tuple4 *addr, struct half_stream *hs,
 			warnx("trigger_tcp: decoding port %d as %s",
 			      addr->dest, t->decode->dc_name);
 		
-		if ((len = t->decode->dc_func(buf, len,
-					      obuf, sizeof(obuf))) > 0) {
+		if ((len = dc_call(t->decode, buf, len, obuf, sizeof(obuf))) > 0) {
 			record(addr->saddr, addr->daddr, IPPROTO_TCP,
 			       addr->source, addr->dest, t->decode->dc_name,
 			       obuf, len);
@@ -384,10 +394,23 @@ trigger_tcp_half(struct tuple4 *addr, struct half_stream *hs,
 	hs->collect = 0;
 }
 
+
+static void
+trigger_tcp_full(struct tuple4 *addr, struct half_stream *hs, struct half_stream *buddy /* S>C */, struct trigger *t) {
+	dc_meta.rbuf = NULL;
+	dc_meta.rlen = buddy->count - buddy->offset;
+	if (dc_meta.rlen > 0)
+		dc_meta.rbuf = buddy->data;
+
+	trigger_tcp_half(addr, hs, t);
+	buddy->collect = hs->collect;
+}
+
 void
 trigger_tcp(struct tcp_stream *ts, void **conn_save)
 {
 	struct trigger *ct, *st, tr;
+	int is_keep_data = 1;
 	
 	tr.num = ts->addr.dest;
 	ct = (struct trigger *) bsearch(&tr, &tcp_triggers, tcp_cnt,
@@ -400,6 +423,11 @@ trigger_tcp(struct tcp_stream *ts, void **conn_save)
 	switch (ts->nids_state) {
 		
 	case NIDS_JUST_EST:
+		if (Opt_verbose) {
+			// Collect SSH banner from both sides.
+			ts->server.collect = 1;
+			ts->client.collect = 1;
+		}
 		if (ct != NULL || Opt_magic) {
 			ts->server.collect = 1;
 		}
@@ -407,30 +435,48 @@ trigger_tcp(struct tcp_stream *ts, void **conn_save)
 			ts->client.collect = 1;
 		}
 		break;
-		
+	
 	case NIDS_DATA:
+		if (Opt_debug) {
+			if (ts->client.count_new > 0)
+				fprintf(stderr, "BY SERVER: ");
+			else
+				fprintf(stderr, "by client: ");
+			fprintf(stderr, "%d/%d ct=%p (C>S=%d) st=%p (ByServer=%d)\n", ts->server.collect, ts->client.collect, ct, ts->server.count_new, st, ts->client.count_new);
+		}
 		if ((ct != NULL || Opt_magic) && ts->server.count_new) {
-			if (ts->server.count - ts->server.offset >=
-			    Opt_snaplen) {
-				trigger_tcp_half(&ts->addr, &ts->server, ct);
+			if (ts->server.count - ts->server.offset >= Opt_snaplen) {
+				trigger_tcp_full(&ts->addr, &ts->server, &ts->client, ct);
+				is_keep_data = 0;
 			}
-			else nids_discard(ts, 0);
-		}
-		else if (st != NULL && ts->client.count_new) {
-			if (ts->client.count - ts->client.offset >=
-			    Opt_snaplen) {
-				trigger_tcp_half(&ts->addr, &ts->client, st);
+		} else if (st != NULL && ts->client.count_new) {
+			if (ts->client.count - ts->client.offset >= Opt_snaplen) {
+				trigger_tcp_full(&ts->addr, &ts->client, &ts->server, st);
+				is_keep_data = 0;
 			}
-			else nids_discard(ts, 0);
 		}
+		if (is_keep_data) {
+			nids_discard(ts, 0 /* Discard 0 bytes */);
+
+			if ((ts->server.count_new > 0) &&  (ts->server.count - ts->server.offset) >= Opt_snaplen) {
+				// fprintf(stderr, "STOPPING C>S collection\n");
+				ts->server.collect = 0;
+			}
+			if ((ts->client.count_new > 0) &&  (ts->client.count - ts->client.offset) >= Opt_snaplen) {
+				// fprintf(stderr, "STOPPING ByServer collection\n");
+				ts->client.collect = 0;
+			}
+		}
+
 		break;
 		
 	default:
+		if (Opt_debug)
+			warnx("CLOSE");
 		if ((ct != NULL || Opt_magic) && ts->server.count > 0) {
-			trigger_tcp_half(&ts->addr, &ts->server, ct);
-		}
-		if (st != NULL && ts->client.count > 0) {
-			trigger_tcp_half(&ts->addr, &ts->client, st);
+			trigger_tcp_full(&ts->addr, &ts->server, &ts->client, ct);
+		} else if (st != NULL && ts->client.count > 0) {
+			trigger_tcp_full(&ts->addr, &ts->client, &ts->server, st);
 		}
 		break;
 	}
@@ -445,13 +491,13 @@ trigger_tcp_raw(struct libnet_ipv4_hdr *ip)
 	int len, ip_hl = ip->ip_hl * 4;
 	
 	len = ntohs(ip->ip_len) - ip_hl;
-
 	if (ip->ip_p != IPPROTO_TCP || len < sizeof(*tcp))
 		return;
 
 	tcp = (struct libnet_tcp_hdr *)((u_char *)ip + ip_hl);
 	
 	tr.num = ntohs(tcp->th_dport);
+	// fprintf(stderr, "Packet len=%d port=%d\n", len, tr.num);
 	
 	t = (struct trigger *) bsearch(&tr, &tcp_triggers, tcp_cnt,
 				       sizeof(tr), trigger_compare);
@@ -563,14 +609,22 @@ trigger_init_list(char *list)
 	}
 }
 
-void
-trigger_init_services(char *services)
+static int
+trigger_init_services_file(char *services)
 {
 	FILE *f;
 	char *name, *port, *proto, line[1024];
-	
-	if ((f = fopen(services, "r")) == NULL)
+	char *fn;
+
+	fn = services;
+	if (fn == NULL)
+		fn = DSNIFF_LIBDIR DSNIFF_SERVICES;
+
+	if ((f = fopen(fn, "r")) == NULL) {
+		if (services == NULL)
+			return 1; // Continue;
 		errx(1, "couldn't open %s", services);
+	}
 	
 	while (fgets(line, sizeof(line), f) != NULL) {
 		if (line[0] == '#' || line[0] == '\n')
@@ -584,5 +638,17 @@ trigger_init_services(char *services)
 		trigger_set(proto, atoi(port), name);
 	}
 	fclose(f);
+	return 0;
+}
+
+void
+trigger_init_services(char *services)
+{
+	if (trigger_init_services_file(services) == 0)
+		return;
+
+	for (int i = 0; i < sizeof dsx / sizeof *dsx; i++) {
+		trigger_set(dsx[i].proto, dsx[i].port, dsx[i].name);
+	}
 }
 

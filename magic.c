@@ -42,7 +42,9 @@
 #include <err.h>
 
 #include "options.h"
+#include "pathnames.h"
 #include "magic.h"
+#include "dsniff_magic.h"
 
 #define LOWCASE(p)	(isupper((u_char) (p)) ? tolower((u_char) (p)) : (p))
 
@@ -499,14 +501,21 @@ magic_parse(char *p)
 	return (1);
 }
 
-void
-magic_init(char *filename)
+static int
+magic_init_file(char *filename)
 {
 	FILE *f;
 	char buf[BUFSIZ];
+	char *fn;
 
-	if ((f = fopen(filename, "r")) == NULL) {
-		err(1, "magic_init");
+	fn = filename;
+	if (fn == NULL)
+		fn = DSNIFF_LIBDIR DSNIFF_MAGIC;
+
+	if ((f = fopen(fn, "r")) == NULL) {
+		if (filename == NULL)
+			return 1; // Continue;
+		errx(1, "magic_init %s", fn);
 	}
 	memset(&Magic, 0, sizeof(Magic));
 	
@@ -520,6 +529,18 @@ magic_init(char *filename)
 		magic_parse(buf);
 	}
 	fclose(f);
+}
+
+void
+magic_init(char *filename) {
+	if (magic_init_file(filename) == 0)
+		return;
+	
+	for (int i = 0; i < sizeof mgx / sizeof *mgx; i++) {
+		if (strlen(mgx[i]) <= 1)
+			continue;
+		magic_parse(mgx[i]);
+	}
 }
 
 /* Convert the byte order of the data we are looking at */

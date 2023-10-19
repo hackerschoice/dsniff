@@ -21,7 +21,6 @@
 #include <pcap.h>
 
 #include "pcaputil.h"
-#include "version.h"
 
 #define MIN_WIN		1	/* XXX */
 #define MIN_MTU		68	/* RFC 1191 */

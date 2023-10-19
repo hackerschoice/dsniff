@@ -3,7 +3,7 @@
 # Network protocol magic(5) for dsniff.
 #
 
-0	string		FLAPON		aim
+#0	string		FLAPON		aim
 
 0	string		BEGIN\ 		cvs
 
@@ -40,6 +40,11 @@
 >4	beshort		0x4100		citrix
 
 0	belong		0x0200e803	icq
+
+0	beshort		0x1603
+>2	byte		0x01
+>>5	byte		0x01
+>>>9	byte		0x03		https
 
 8	belong		0x0135012c
 >12	belong		0x0c010800
@@ -86,9 +91,11 @@
 >>3	beshort		>0xfff9
 >>>5	byte		<40		telnet
 
-2	leshort		2
->(0.b+6)	leshort	208		napster
->(0.b+6)	leshort	2		napster
+0	string		SSH-		ssh
+
+#2	leshort		2
+#>(0.b+6)	leshort	208		napster
+#>(0.b+6)	leshort	2		napster
 
 0	byte		0x38
 >8	belong		0x00002455	mmxp

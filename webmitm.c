@@ -29,7 +29,6 @@
 
 #include "buf.h"
 #include "record.h"
-#include "version.h"
 
 #define CERT_FILE	"webmitm.crt"
 

@@ -23,7 +23,6 @@
 #include <libnet.h>
 #include <pcap.h>
 
-#include "version.h"
 
 extern char *ether_ntoa(struct ether_addr *);
 extern struct ether_addr *ether_aton(char *);
