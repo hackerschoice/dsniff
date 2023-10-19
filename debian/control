@@ -1,0 +1,37 @@
+Source: dsniff
+Section: net
+Priority: optional
+Maintainer: Debian Security Tools <team+pkg-security@tracker.debian.org>
+Uploaders: Marcos Fouces <marcos@debian.org>, Lukas Schwaighofer <lukas@schwaighofer.name>
+Standards-Version: 4.6.1
+Build-Depends: libdb-dev, libpcap0.8-dev, libnids-dev, libssl-dev, libxmu-dev, libnet1-dev, debhelper-compat (= 13)
+Homepage: https://www.monkey.org/~dugsong/dsniff/
+Vcs-Git: https://salsa.debian.org/pkg-security-team/dsniff.git
+Vcs-Browser: https://salsa.debian.org/pkg-security-team/dsniff
+Rules-Requires-Root: no
+
+Package: dsniff
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, openssl
+Description: Various tools to sniff network traffic for cleartext insecurities
+ This package contains several tools to listen to and create network traffic:
+ .
+  * arpspoof  - Send out unrequested (and possibly forged) arp replies.
+  * dnsspoof  - forge replies to arbitrary DNS address / pointer queries
+              on the Local Area Network.
+  * dsniff    - password sniffer for several protocols.
+  * filesnarf - saves selected files sniffed from NFS traffic.
+  * macof     - flood the local network with random MAC addresses.
+  * mailsnarf - sniffs mail on the LAN and stores it in mbox format.
+  * msgsnarf  - record selected messages from different Instant Messengers.
+  * sshmitm   - SSH monkey-in-the-middle. proxies and sniffs SSH traffic.
+  * sshow     - SSH traffic analyser.
+  * tcpkill   - kills specified in-progress TCP connections.
+  * tcpnice   - slow down specified TCP connections via "active"
+              traffic shaping.
+  * urlsnarf  - output selected URLs sniffed from HTTP traffic in CLF.
+  * webmitm   - HTTP / HTTPS monkey-in-the-middle. transparently proxies.
+  * webspy    - sends URLs sniffed from a client to your local browser
+              (requires libx11-6 installed).
+ .
+ Please do not abuse this software.

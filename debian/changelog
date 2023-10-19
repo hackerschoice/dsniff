@@ -1,0 +1,470 @@
+dsniff (2.4b1+debian-31) unstable; urgency=medium
+
+  [ Marcos Fouces ]
+  * Acknowledge Janitor commits.
+  * Update d/copyright.
+
+  [ Debian Janitor ]
+  * Update standards version to 4.6.0, no changes needed.
+  * Remove constraints unnecessary since buster (oldstable)
+  * Update standards version to 4.6.1, no changes needed.
+
+ -- Marcos Fouces <marcos@debian.org>  Fri, 04 Nov 2022 18:22:37 +0100
+
+dsniff (2.4b1+debian-30) unstable; urgency=medium
+
+  [ Samuel Henrique ]
+  * Add salsa-ci.yml
+  * Configure git-buildpackage for Debian
+
+  [ Deb Janitor ]
+  * Use secure URI in Homepage field.
+  * Set debhelper-compat version in Build-Depends.
+  * Fix day-of-week for changelog entries 2.4b1-10, 2.4b1-3.6, 2.4b1-3.5.
+
+  [ Marcos Fouces ]
+  * Bump to debhelper-compat 12.
+  * Add Rules-Requires-Root: no in control file.
+  * Bump to Standards-Version 4.5.0
+  * Add modified 37_fix-lib-and-share-dirs.patch (Closes: #919631).
+  * Remove -Wl,--as-needed linker flags as they are no more needed
+    with Bullseye toolchain.
+  * Update uploader email to @debian.org.
+  * Add 38_fix-pcap_init.patch (Closes: #980588)
+  * Bump to debhelper-compat level 13.
+  * Bump to Standards-Version 4.5.1 (no changes required).
+  * Build against libtirpc as a separate library.
+
+ -- Marcos Fouces <marcos@debian.org>  Wed, 10 Feb 2021 18:26:44 +0100
+
+dsniff (2.4b1+debian-29) unstable; urgency=medium
+
+  [ Raphaël Hertzog ]
+  * Update team maintainer address to
+    Debian Security Tools <team+pkg-security@tracker.debian.org>
+  * Update Vcs-Git and Vcs-Browser for the move to salsa.debian.org
+
+  [ Samuel Henrique ]
+  * d/copyright: Remove trailing whitespace and align author names
+
+  [ Marcos Fouces ]
+  * Update to dh 11
+  * Remove trailing whitespaces.
+  * Fix spelling errors spotted by Lintian.
+  * Update copyright years.
+  * Add proper Files-excluded field in d/copyright.
+  * Bump to Standards-revision 4.2.1 (no changes required).
+  * Use secure URL in d/watch file.
+  * Bump to uscan version 4.
+
+ -- Marcos Fouces <marcos.fouces@gmail.com>  Sun, 04 Nov 2018 22:22:12 -0200
+
+dsniff (2.4b1+debian-28) unstable; urgency=medium
+
+  [ Lukas Schwaighofer ]
+  * fix implicit declarations compiler warning
+    - switch to C99 uint64_t, remove now unnecessary xdr_u_int64_t function
+    - include missing string.h for memset
+  * bump Standards version to 4.0.0 (no change required)
+
+ -- Lukas Schwaighofer <lukas@schwaighofer.name>  Fri, 21 Jul 2017 20:05:34 +0200
+
+dsniff (2.4b1+debian-27) unstable; urgency=high
+
+  * Fix a parallel FTBFS due to missing Makefile dependencies.  Thanks to
+    Adrian Bunk (Closes: #869086).
+
+ -- Lukas Schwaighofer <lukas@schwaighofer.name>  Thu, 20 Jul 2017 20:00:38 +0200
+
+dsniff (2.4b1+debian-26) unstable; urgency=medium
+
+  * Team upload.
+
+  [ Marcos Fouces ]
+  * Fix 27_arpspoof-allow-use-of-multiple-interface.patch
+    Thanks to João Salavisa. Closes: #706766
+  * Add 34_Add_CPPFLAGS.patch to build binaries with
+    all default Debian compiler flags.
+
+  [ Lukas Schwaighofer ]
+  * no longer export CC, cross compiling works fine without on dh 10
+  * avoid unnecessary linking by passing -Wl,--as-needed
+  * pass prefix= to dh_auto_install instead of calling make directly
+  * remove outdated information from README.Debian, document notable changes
+    from upstream instead
+
+  [ Raphaël Hertzog ]
+  * Drop Recommends on libx11-6, it's already in Depends via
+    shlibs:Depends.
+
+ -- Raphaël Hertzog <hertzog@debian.org>  Thu, 15 Jun 2017 18:20:50 +0200
+
+dsniff (2.4b1+debian-25) unstable; urgency=medium
+
+  * debian/control: Added myself to Uploaders.
+  * Make sure libmissing.a is built before PROGS (Closes: #860611).
+
+ -- Lukas Schwaighofer <lukas@schwaighofer.name>  Wed, 19 Apr 2017 20:15:27 +0200
+
+dsniff (2.4b1+debian-24) unstable; urgency=medium
+
+  * Fix FTCBFS: Pass triplet-prefixed CC to configure.
+    Thanks to Helmut Grohne (Closes: #852360).
+  * Add four patches from Fedora:
+    (Closes: #715646, #716355, #716457, #716458)
+    + 29_libnet_name2addr4.patch
+    + 30_pntohl_shift.patch
+    + 31_sysconf_clocks.patch
+    + 32_rpc_segfault.patch (Closes: #855869)
+  * Polish, reorder and refresh patches.
+  * Add 33_sshcrypto_DES.patch
+  * Improve dep3 description in 33_sshcrypto_DES.patch
+  (as request by Stretch release team)
+
+ -- Marcos Fouces <mfouces@yahoo.es>  Mon, 13 Mar 2017 18:34:19 +0100
+
+dsniff (2.4b1+debian-23) unstable; urgency=medium
+
+  * Assign to pkg-security team (Closes: #847505)
+  * Add 24_Fix-OpenSSL1.1.0-Build.patch.
+    Thanks to Christoph Biedl. Closes (#828287)
+  * Bump to dh compat level 10
+  * Update copyright file
+  * Bump to standards-revision 3.9.8
+  * Fix copyright file
+  * Add hardening options
+  * Add 25_fix-spelling-errors.patch
+
+ -- Marcos Fouces <mfouces@yahoo.es>  Tue, 06 Dec 2016 12:08:15 +0100
+
+dsniff (2.4b1+debian-22.1) unstable; urgency=low
+
+  * Non-maintainer upload.
+  * Fix TDS decoder patch (Closes: #712648).
+
+ -- Andrew Shadura <andrewsh@debian.org>  Sat, 30 Nov 2013 21:29:23 +0100
+
+dsniff (2.4b1+debian-22) unstable; urgency=low
+
+  * Acknowledge NMU.
+     + Thanks Hilko Bengen
+  * Bump standards to 3.9.3.
+  * Added a patches:
+     + Fix POP decoder in dsniff (Closes: #647583).
+     + Add both communication partners in arpspoof (Closes: #650749).
+     + Allow multiple targets to be imitated simultaniously (Closes: #650751).
+     + arpspoof: allow the selection of source hw address (Closes: #650752).
+     + Thanks Stefan Tomanek.
+
+ -- William Vera <billy@billy.com.mx>  Tue, 06 Mar 2012 22:42:43 -0600
+
+dsniff (2.4b1+debian-21.1) unstable; urgency=low
+
+  * Non-maintainer upload.
+  * Updated urlsnarf timestamp patch (Closes: #636202)
+
+ -- Hilko Bengen <bengen@debian.org>  Tue, 06 Sep 2011 10:15:26 +0200
+
+dsniff (2.4b1+debian-21) unstable; urgency=low
+
+  * Changed patch system to quilt from dpatch.
+  * Updated debian/README.source for quilt.
+  * Removed lintian override.
+  * Cleanup the debian/rules.
+  * Build-Depend changed to libdb-dev (>= 4.7) (Closes: #548478).
+  * Added urlsnarf patch (Closes: #573365).
+     + Thanks Hilko Bengen.
+
+ -- William Vera <billy@billy.com.mx>  Wed, 15 Jun 2011 00:43:02 -0500
+
+dsniff (2.4b1+debian-20) unstable; urgency=low
+
+  * New maintainer (Closes: #626602).
+  * Acknowledge NMU.
+  * Bump standards to 3.9.2.
+  * Removed debian/dsniff.override.lintian.
+  * Added Debian source format.
+  * Added watch file.
+  * Added "Homepage" in debian/control.
+  * Added a description for patches:
+     + 08_openssl-0.9.8.dpatch and 09_sysconf_clocks.dpatch.
+  * Fixed: urlsnarf always shows the current time. (Closes: #415734).
+     + Thanks Barry deFreese.
+  * Added tcpkill support for handle ppp interfaces. (Closes: #572516).
+     + Thanks Joerg Dorchain.
+  * Switch to dpkg-source 3.0 (quilt) format
+
+ -- William Vera <billy@billy.com.mx>  Tue, 14 Jun 2011 06:21:40 -0500
+
+dsniff (2.4b1+debian-19.1) unstable; urgency=low
+
+  * Non-maintainer upload.
+  * Build-depend on libdb-dev (Closes: #621105)
+
+ -- Ondřej Surý <ondrej@debian.org>  Fri, 13 May 2011 11:24:37 +0200
+
+dsniff (2.4b1+debian-19) unstable; urgency=low
+
+  * Standards-Version: 3.9.1
+  * DoS in TDS decoder fixed (closes: #609988).
+  * Some lintian cleaning.
+
+ -- Luciano Bello <luciano@debian.org>  Tue, 18 Jan 2011 11:37:21 -0300
+
+dsniff (2.4b1+debian-18) unstable; urgency=low
+
+  * Swiching to db4.6 (closes:#442643)
+
+ -- Luciano Bello <luciano@debian.org>  Sat, 27 Sep 2008 21:50:54 -0300
+
+dsniff (2.4b1+debian-17) unstable; urgency=low
+
+  * The 'Now works' release
+  * obsolete_time.dpatch: CLK_TCK updated to CLOCKS_PER_SEC (closes:#420944).
+  * pop_with_version.dpatch: dsniff.services distinguish between pop versions.
+  * checksum_libnids.dpatch: Workaround to #420129, because libnids does not
+    trigger the tcp_callback callback for event that come from the client side.
+
+ -- Luciano Bello <luciano@debian.org>  Fri, 10 Aug 2007 19:56:39 -0300
+
+dsniff (2.4b1+debian-16) experimental; urgency=low
+
+  * Urlsnarf sanitizes the sniffed output (Closes:#400624).
+  * The Uploaders field in ~/debian/control added.
+  * The Recommends field in ~/debian/control added.
+  * The long description cosmetic improvement.
+
+ -- Luciano Bello <luciano@linux.org.ar>  Fri,  8 Dec 2006 18:31:05 -0300
+
+dsniff (2.4b1+debian-15) unstable; urgency=low
+
+  * New mainteiner (Closes:#390822).
+  * Disable the filtering packets with incorrect checksum (Closes:#372536),
+    thanks to Piotr Engelking.
+  * No depends from xlibs and all the other X stuff. The webspy run
+    dependencies are being ignored (Closes:#146246). Please, read README.Debian.
+  * Source without CVS directories (reason of the +debian in the upstream
+    version).
+
+ -- Luciano Bello <luciano@linux.org.ar>  Wed, 18 Oct 2006 23:05:04 -0300
+
+dsniff (2.4b1-14) unstable; urgency=low
+
+  * Fixed arspoof libnet v1.1 bug, thanks to Krzysztof Burghardt.
+    (Closes: #355933)
+  * Fixed macof libnet v1.1 bug, thanks to Florian Weimer.
+    (Closes: #366798)
+  * Switched from libdb4.2 to libdb4.3.
+  * Updated Standards-Version to 3.7.2, no changes needed.
+  * Changed my e-mail address to my debian.org one.
+
+ -- Faidon Liambotis <paravoid@debian.org>  Fri,  9 Jun 2006 14:13:30 +0300
+
+dsniff (2.4b1-13) unstable; urgency=low
+
+  * Fix FTBFS with OpenSSL 0.9.8. (Closes: #337267)
+
+ -- Faidon Liambotis <faidon@cube.gr>  Thu,  3 Nov 2005 20:29:48 +0200
+
+dsniff (2.4b1-12) unstable; urgency=low
+
+  * Build-Depend on new libnids1.20 package.
+    (Closes: #318678)
+  * Adapt 01_time.h.dpatch to patch msgsnarf too.
+    (Closes: #315969)
+  * 03_pcap_read_dump.dpatch: expand read pcap dump file to all passive
+    sniffers. Thanks to Joshua Krage for this patch.
+    (Closes: #298604)
+  * Removed obsolete dependency on debmake.
+  * Replaced build-dependency on xlibs-dev with libxmu-dev.
+
+ -- Faidon Liambotis <faidon@cube.gr>  Sat,  6 Aug 2005 12:17:00 +0000
+
+dsniff (2.4b1-11) unstable; urgency=low
+
+  * New co-maintainer: Faidon Liambotis, added to Uploaders.
+  * Changes from Faidon:
+     * Now using debhelper and dpatch.
+     * Split changes to multiple dpatches with appropriate descriptions.
+     * patches/07_libnet_1.1: now depending on libnet1 (v1.1)
+     * Updated Standard-Versions to 3.6.2.1.
+
+ -- Steve Kemp <skx@debian.org>  Thu, 23 Jun 2005 04:32:34 +0000
+
+dsniff (2.4b1-10) unstable; urgency=low
+
+  * Applied patch from Joshua Krage to zero-pad "urlsnarf" output.
+    (Closes: #298605)
+
+ -- Steve Kemp <skx@debian.org>  Sun, 01 May 2005 22:58:27 +0000
+
+dsniff (2.4b1-9) unstable; urgency=low
+
+  * Updated to depend upon the newer version of libnids 1.20
+
+ -- Steve Kemp <skx@debian.org>  Mon, 28 Feb 2005 04:26:27 +0000
+
+dsniff (2.4b1-8) unstable; urgency=high
+
+  * Updated to depend upon the newer version of libnids 1.19
+
+ -- Steve Kemp <skx@debian.org>  Sun, 12 Dec 2004 15:52:34 +0000
+
+dsniff (2.4b1-7) unstable; urgency=high
+
+  * Explicitly Build-Depend upon libpcap0.8-dev
+    (Fixes: #238551) Failed to work correctly on PPC
+    (Fixes: #277089) Links to two different pcap library versions.
+  * Patch dsniff to allow the reading of saved PCAP capture files
+    instead of sniffing the network.   Updated manpage too.
+    (Closes: #153462)
+
+  * Urgency set to high to importance of failure to work.
+
+ -- Steve Kemp <skx@debian.org>  Mon, 18 Oct 2004 21:27:01 +0000
+
+dsniff (2.4b1-6) unstable; urgency=low
+
+  * Apply configure patch to correct build upon amd64.
+    (Closes: #254002) Thanks to Andreas Jochens for this.
+    Patch submitted upstream too.
+
+ -- Steve Kemp <skx@debian.org>  Tue,  6 Jul 2004 21:38:56 +0000
+
+dsniff (2.4b1-5) unstable; urgency=low
+
+  * Updated build dependecies to fix the FTBFS on ia64 and Alpha.
+    (Closes: #249845)
+
+ -- Steve Kemp <skx@debian.org>  Sun, 23 May 2004 02:09:42 +0000
+
+dsniff (2.4b1-4) unstable; urgency=low
+
+  * Verified lintian and linda clean.
+  * Stop using NMU version numbers.
+    (Closes: #230881)
+  * Use a current version of libdb2 instead of the older version.
+    (Closes: #215241)
+  * Work correctly with multiple devices.
+    (Closes: #242369) Thanks to terpstra@debian.org for the patch.
+
+ -- Steve Kemp <skx@debian.org>  Tue, 18 May 2004 16:07:12 +0000
+
+dsniff (2.4b1-3.6) unstable; urgency=low
+
+  * Depend correctly on libnids 1.18 - not just build depend upon
+    the -dev package.
+
+ -- Steve Kemp <skx@debian.org>  Tue, 07 Jan 2003 20:15:17 +0000
+
+dsniff (2.4b1-3.5) unstable; urgency=low
+
+  * Updated to depend upon a more recent copy of libnids.
+
+ -- Steve Kemp <skx@debian.org>  Tue, 07 Jan 2003 19:51:21 +0000
+
+dsniff (2.4b1-3.4) unstable; urgency=low
+
+  * Fixed typo in the packages extended description.
+    (Closes: #219170).  Thanks to James Troup
+
+ -- Steve Kemp <skx@debian.org>  Wed,  5 Nov 2003 14:52:04 +0000
+
+dsniff (2.4b1-3.3) unstable; urgency=low
+
+  * Updated standars version to 3.6.1 (no change)
+  * Applied patch to prevent mail sniffing corruption.
+    (Closes: #149330).  Thanks to Guillaume Morin
+
+ -- Steve Kemp <skx@debian.org>  Thu, 16 Oct 2003 10:21:56 +0000
+
+dsniff (2.4b1-3.2) unstable; urgency=low
+
+  * New maintainer.
+  * Updated standards version.
+
+ -- Steve Kemp <skx@debian.org>  Sat, 15 Nov 2003 15:53:26 +0100
+
+dsniff (2.4b1-3.1) unstable; urgency=low
+
+  * NMU
+  * Compiled against libpcap0.7 (Closes: #156214) (Closes: #161746)
+  * Moved out to non-us
+
+ -- Samuele Giovanni Tonon <samu@debian.org>  Thu,  7 Nov 2002 00:19:33 +0100
+
+dsniff (2.4b1-3) unstable; urgency=low
+
+  * Fixed dependency problem (Closes: #118887)
+  * Addition of sshow in control file (Closes: #118888)
+  * Some small lintian-cleanness-fixes.
+
+ -- Robert van der Meulen <rvdm@debian.org>  Sun, 25 Nov 2001 15:18:32 +0100
+
+dsniff (2.4b1-2) unstable; urgency=low
+
+  * Fixed build depends (Closes: #108964)
+  * Fixed arm build failure (Closes: #90829)
+  * Fixed sparc build failure (Closes: #84003)
+
+ -- Robert van der Meulen <rvdm@debian.org>  Fri, 17 Aug 2001 12:53:55 +0200
+
+dsniff (2.4b1-1) unstable; urgency=low
+
+  * New upstream version
+  * Fixed manpage (Closes: #90558)
+  * Fixed build depends (Closes: #108866)
+
+ -- Robert van der Meulen <rvdm@debian.org>  Thu, 16 Aug 2001 17:23:59 +0200
+
+dsniff (2.3-3) unstable; urgency=low
+
+  * Fixed more build-depends stuffstuff (Closes: #88139)
+
+ -- Robert van der Meulen <rvdm@debian.org>  Fri,  2 Mar 2001 21:27:08 +0100
+
+dsniff (2.3-2.1) unstable; urgency=low
+
+  * Bug Party NMU!
+  * Added Build-Depends: libdb2-dev, libnids-dev, libpcap-dev,
+    libssl096-dev, xlibs-dev, libnet-dev, netkit-rpc,
+    debmake (closes: #84195, #84485).
+  * Created a real description from the README (closes: #82201).
+
+ -- Peter Palfrader <weasel@debian.org>  Sat, 24 Feb 2001 21:01:01 +0000
+
+dsniff (2.3-2) unstable; urgency=low
+
+  * Moved to non-US because of libssl096 Depends:. (closes: #81110)
+
+ -- Robert van der Meulen <rvdm@debian.org>  Tue,  9 Jan 2001 22:46:18 +0100
+
+dsniff (2.3-1) unstable; urgency=low
+
+  * New upstream version.
+
+ -- Robert van der Meulen <rvdm@debian.org>  Tue, 19 Dec 2000 15:30:37 +0100
+
+dsniff (2.2-4) unstable; urgency=low
+
+  * Dependency was still wrong in -3. Fixed. (closes: #79514)
+
+ -- Robert van der Meulen <rvdm@debian.org>  Thu, 14 Dec 2000 15:04:26 +0100
+
+dsniff (2.2-3) unstable; urgency=low
+
+  * fixed dependencies; dsniff now depends on libnids1 (dynamic library)
+
+ -- Robert van der Meulen <rvdm@debian.org>  Sun, 10 Dec 2000 19:52:20 +0100
+
+dsniff (2.2-2) unstable; urgency=low
+
+  * 'new maintainer' (actually, real maintainer :) )
+
+ -- Robert van der Meulen <rvdm@debian.org>  Sat,  9 Dec 2000 21:56:01 +0100
+
+dsniff (2.2-1) unstable; urgency=low
+
+  * Initial release.
+
+ -- David M. Zendzian <dmz@debian.org>  Sun, 23 Jul 2000 19:05:38 -0700

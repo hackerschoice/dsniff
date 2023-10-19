@@ -1,0 +1,47 @@
+.TH ARPSPOOF 8
+.ad
+.fi
+.SH NAME
+arpspoof
+\-
+intercept packets on a switched LAN
+.SH SYNOPSIS
+.na
+.nf
+.fi
+\fBarpspoof\fR [\fB\-i \fIinterface\fR] [\fB\-c \fIown|host|both\fR] [\fB\-t \fItarget\fR] [\fB\-r\fR] \fIhost\fR
+.SH DESCRIPTION
+.ad
+.fi
+\fBarpspoof\fR redirects packets from a target host (or all hosts)
+on the LAN intended for another host on the LAN by forging ARP
+replies.  This is an extremely effective way of sniffing traffic on a
+switch.
+.LP
+Kernel IP forwarding (or a userland program which accomplishes the
+same, e.g. fragrouter(8)) must be turned on ahead of time.
+.SH OPTIONS
+.IP "\fB-i \fIinterface\fR"
+Specify the interface to use.
+.IP "\fB-c \fIown|host|both\fR"
+Specify which hardware address t use when restoring the arp configuration;
+while cleaning up, packets can be send with the own address as well as with
+the address of the host. Sending packets with a fake hw address can disrupt
+connectivity with certain switch/ap/bridge configurations, however it works
+more reliably than using the own address, which is the default way arpspoof
+cleans up afterwards.
+.IP "\fB-t \fItarget\fR"
+Specify a particular host to ARP poison (if not specified, all hosts
+on the LAN). Repeat to specify multiple hosts.
+.IP "\fB\-r\fR"
+Poison both hosts (host and target) to capture traffic in both directions.
+(only valid in conjuntion with \-t)
+.IP \fIhost\fR
+Specify the host you wish to intercept packets for (usually the local
+gateway).
+.SH "SEE ALSO"
+dsniff(8), fragrouter(8)
+.SH AUTHOR
+.na
+.nf
+Dug Song <dugsong@monkey.org>
