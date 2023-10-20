@@ -86,7 +86,8 @@ jobs:
   Linux-Cross-Compile:
     strategy:
       matrix:
-        arch: [x86_64] #, aarch64, mips64, mips32, mipsel, i686, arm, armv6, armv7l]
+        arch: [x86_64]
+        #, aarch64, mips64, mips32, mipsel, i686, arm, armv6, armv7l]
         include:
           - arch: x86_64
             cc: x86_64-linux-musl
@@ -136,7 +137,8 @@ jobs:
           make install
           cd ../../
           LIBS="-lglib-2.0 -lintl -lgthread-2.0" ./configure --enable-static --host=${{ matrix.arch }}
-          make all
+          cat Makefile
+          make dsniff
           strip dsniff
           mv dsniff dsniff_linux-${{ matrix.arch }}
 
