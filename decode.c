@@ -254,7 +254,7 @@ color_domain(u_char *dst, size_t dsz, u_char *src) {
 			n++;
 			continue;
 		}
-		if (!isdigit(*end))
+		if (!((*end >= '0') && (*end <= '9')))
 			is_ip = 0;
 	}
 
