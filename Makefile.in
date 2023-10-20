@@ -106,6 +106,8 @@ nfs_prot.o: nfs_prot.h
 
 filesnarf.o: nfs_prot.h
 
+gen: $(GEN)
+
 $(LIBOBJS):
 	$(CC) $(CFLAGS) $(CPPFLAGS) $(INCS) -c $(srcdir)/missing/$*.c
 
@@ -176,7 +178,7 @@ install:
 	done
 
 clean:
-	rm -f *.o *~ $(GEN) libmissing.a $(PROGS) webmitm.crt
+	rm -f *.o *~ libmissing.a $(PROGS) webmitm.crt
 
 dist:
 	-rm -rf dsniff-$(VER)
@@ -187,6 +189,6 @@ dist:
 	tar cfz dsniff-$(VER).tar.gz dsniff-$(VER)
 
 distclean: clean
-	rm -f Makefile config.h config.cache config.log config.status
+	rm -f Makefile $(GEN) config.h config.cache config.log config.status
 
 # EOF

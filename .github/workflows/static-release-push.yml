@@ -7,6 +7,7 @@ permissions:
 env:
   # OPENSSL_VER: 1.1.1w
   VER: 2.5a1
+  DB_PKGVER: 5.3.28
 
 jobs:
   FreeBSD:
@@ -81,3 +82,77 @@ jobs:
           overwrite: true
           file_glob: true
           tag: v${{ env.VER }}
+
+  Linux-Cross-Compile:
+    strategy:
+      matrix:
+        arch: [x86_64] #, aarch64, mips64, mips32, mipsel, i686, arm, armv6, armv7l]
+        include:
+          - arch: x86_64
+            cc: x86_64-linux-musl
+            ssl: linux-generic64
+          - arch: aarch64
+            cc: aarch64-linux-musl
+            ssl: linux-generic64
+          - arch: mips64
+            cc: mips64-linux-musl
+            ssl: linux64-mips64
+          - arch: mips32
+            cc: mips-linux-muslsf
+            ssl: linux-mips32
+          - arch: mipsel
+            cc: mipsel-linux-muslsf
+            ssl: linux-mips32
+          - arch: i686
+            cc: i686-linux-musl
+            ssl: linux-generic32
+          - arch: arm
+            cc: arm-linux-musleabi
+            ssl: linux-generic32
+          - arch: armv6
+            cc: armv6-linux-musleabi
+            ssl: linux-generic32
+          - arch: armv7l
+            cc: armv7l-linux-musleabihf
+            ssl: linux-generic32
+    runs-on: ubuntu-latest
+    container:
+      image: muslcc/x86_64:${{ matrix.cc }}
+      options: --user root
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Add build dependencies
+        run: |
+          apk add --update --no-cache --no-progress bash curl upx musl-dev linux-headers gcc make build-base db-dev libpcap-dev libnet-dev libnids-dev libtirpc-dev libnsl-dev openssl-dev musl-libintl libnsl-static libnet-static libtirpc-static openssl-libs-static glib-static 
+
+        run: |
+          curl -fL "https://download.oracle.com/berkeley-db/db-${DB_PKGVER}.tar.gz" | tar xfz -
+          cd db-${DB_PKGVER}
+          curl -fL "https://git.alpinelinux.org/aports/plain/main/db/atomic.patch" | patch -p1
+          cd build_unix
+          ../dist/configure --prefix=/usr --mandir=/usr/share/man --enable-compat185 --disable-shared
+          make install
+          cd ../../
+          autoconf
+          LIBS="-lglib-2.0 -lintl -lgthread-2.0" ./configure --enable-static --host=${{ matrix.arch }}
+          make all
+          strip dsniff
+          mv dsniff dsniff_linux-${{ matrix.arch }}
+
+      - name: Upload dsniff to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: dsniff_linux-${{ matrix.arch }}
+          overwrite: true
+          tag: v${{ env.VER }}
+
+      - name: Upload gsocket to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: gsocket_linux-${{ matrix.arch }}.tar.gz
+          overwrite: true
+          tag: v${{ env.VER }}
+
