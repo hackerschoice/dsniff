@@ -37,7 +37,7 @@ dsniff-2.3
 ```
 
 i wrote these tools with honest intentions - to audit my own network,
-                     ^^^^^^^^THC: So did we!
+                     ^^^^^^^^THC: So did we :pPPpPpp
 and to demonstrate the insecurity of cleartext / weakly-encrypted
 network protocols and ad-hoc PKI. please do not abuse this software.
 
