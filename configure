@@ -5617,6 +5617,138 @@ fi
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $enable_static" >&5
 printf "%s\n" "$enable_static" >&6; }
 
+if test "x$enable_static" = "xyes"; then
+      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for g_mutex_init in -lglib-2.0" >&5
+printf %s "checking for g_mutex_init in -lglib-2.0... " >&6; }
+if test ${ac_cv_lib_glib_2_0_g_mutex_init+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lglib-2.0  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+char g_mutex_init ();
+int
+main (void)
+{
+return g_mutex_init ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"
+then :
+  ac_cv_lib_glib_2_0_g_mutex_init=yes
+else $as_nop
+  ac_cv_lib_glib_2_0_g_mutex_init=no
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_glib_2_0_g_mutex_init" >&5
+printf "%s\n" "$ac_cv_lib_glib_2_0_g_mutex_init" >&6; }
+if test "x$ac_cv_lib_glib_2_0_g_mutex_init" = xyes
+then :
+  printf "%s\n" "#define HAVE_LIBGLIB_2_0 1" >>confdefs.h
+
+  LIBS="-lglib-2.0 $LIBS"
+
+fi
+
+   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for g_thread_init in -lgthread-2.0" >&5
+printf %s "checking for g_thread_init in -lgthread-2.0... " >&6; }
+if test ${ac_cv_lib_gthread_2_0_g_thread_init+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lgthread-2.0  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+char g_thread_init ();
+int
+main (void)
+{
+return g_thread_init ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"
+then :
+  ac_cv_lib_gthread_2_0_g_thread_init=yes
+else $as_nop
+  ac_cv_lib_gthread_2_0_g_thread_init=no
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_gthread_2_0_g_thread_init" >&5
+printf "%s\n" "$ac_cv_lib_gthread_2_0_g_thread_init" >&6; }
+if test "x$ac_cv_lib_gthread_2_0_g_thread_init" = xyes
+then :
+  printf "%s\n" "#define HAVE_LIBGTHREAD_2_0 1" >>confdefs.h
+
+  LIBS="-lgthread-2.0 $LIBS"
+
+fi
+
+   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for libintl_gettext in -lintl" >&5
+printf %s "checking for libintl_gettext in -lintl... " >&6; }
+if test ${ac_cv_lib_intl_libintl_gettext+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lintl  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+char libintl_gettext ();
+int
+main (void)
+{
+return libintl_gettext ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"
+then :
+  ac_cv_lib_intl_libintl_gettext=yes
+else $as_nop
+  ac_cv_lib_intl_libintl_gettext=no
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_intl_libintl_gettext" >&5
+printf "%s\n" "$ac_cv_lib_intl_libintl_gettext" >&6; }
+if test "x$ac_cv_lib_intl_libintl_gettext" = xyes
+then :
+  printf "%s\n" "#define HAVE_LIBINTL 1" >>confdefs.h
+
+  LIBS="-lintl $LIBS"
+
+fi
+
+fi
+
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for Berkeley DB with 1.85 compatibility" >&5
 printf %s "checking for Berkeley DB with 1.85 compatibility... " >&6; }
 

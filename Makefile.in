@@ -116,49 +116,49 @@ libmissing.a: $(LIBOBJS)
 	$(RANLIB) $@
 
 dsniff: $(HDRS) $(SRCS) $(OBJS) libmissing.a
-	$(CC) $(LDFLAGS) -o $@ $(OBJS) $(LIBS) $(NIDSLIB) $(PCAPLIB) $(LNETLIB) $(DBLIB) $(SSLLIB) $(TIRPCLIB)
+	$(CC) $(LDFLAGS) -o $@ $(OBJS) $(NIDSLIB) $(PCAPLIB) $(LNETLIB) $(DBLIB) $(SSLLIB) $(TIRPCLIB) $(LIBS)
 
 arpspoof: arpspoof.o arp.o libmissing.a
-	$(CC) $(LDFLAGS) -o $@ arpspoof.o arp.o $(LIBS) $(PCAPLIB) $(LNETLIB)
+	$(CC) $(LDFLAGS) -o $@ arpspoof.o arp.o $(PCAPLIB) $(LNETLIB) $(LIBS) 
 
 dnsspoof: dnsspoof.o pcaputil.o libmissing.a
-	$(CC) $(LDFLAGS) -o $@ dnsspoof.o pcaputil.o $(LIBS) $(PCAPLIB) $(LNETLIB)
+	$(CC) $(LDFLAGS) -o $@ dnsspoof.o pcaputil.o $(PCAPLIB) $(LNETLIB) $(LIBS) 
 
 filesnarf: nfs_prot.o filesnarf.o pcaputil.o rpc.o libmissing.a
-	$(CC) $(LDFLAGS) -o $@ filesnarf.o nfs_prot.o pcaputil.o rpc.o $(LIBS) $(NIDSLIB) $(PCAPLIB) $(LNETLIB) $(TIRPCLIB)
+	$(CC) $(LDFLAGS) -o $@ filesnarf.o nfs_prot.o pcaputil.o rpc.o $(NIDSLIB) $(PCAPLIB) $(LNETLIB) $(TIRPCLIB) $(LIBS) 
 
 macof: macof.o libmissing.a
-	$(CC) $(LDFLAGS) -o $@ macof.o $(LIBS) $(PCAPLIB) $(LNETLIB)
+	$(CC) $(LDFLAGS) -o $@ macof.o $(PCAPLIB) $(LNETLIB) $(LIBS) 
 
 mailsnarf: mailsnarf.o buf.o pcaputil.o libmissing.a
-	$(CC) $(LDFLAGS) -o $@ mailsnarf.o buf.o pcaputil.o $(LIBS) $(NIDSLIB) $(PCAPLIB) $(LNETLIB)
+	$(CC) $(LDFLAGS) -o $@ mailsnarf.o buf.o pcaputil.o $(NIDSLIB) $(PCAPLIB) $(LNETLIB) $(LIBS) 
 
 msgsnarf: msgsnarf.o buf.o pcaputil.o libmissing.a
-	$(CC) $(LDFLAGS) -o $@ msgsnarf.o buf.o pcaputil.o $(LIBS) $(NIDSLIB) $(PCAPLIB) $(LNETLIB)
+	$(CC) $(LDFLAGS) -o $@ msgsnarf.o buf.o pcaputil.o $(NIDSLIB) $(PCAPLIB) $(LNETLIB) $(LIBS) 
 
 sshmitm: sshmitm.o buf.o hex.o record.o ssh.o sshcrypto.o libmissing.a
-	$(CC) $(LDFLAGS) -o $@ sshmitm.o buf.o hex.o record.o ssh.o sshcrypto.o $(LIBS) $(LNETLIB) $(DBLIB) $(SSLLIB) $(TIRPCLIB)
+	$(CC) $(LDFLAGS) -o $@ sshmitm.o buf.o hex.o record.o ssh.o sshcrypto.o $(LNETLIB) $(DBLIB) $(SSLLIB) $(TIRPCLIB) $(LIBS)
 
 sshow: sshow.o pcaputil.o libmissing.a
-	$(CC) $(LDFLAGS) -o $@ sshow.o pcaputil.o $(LIBS) $(NIDSLIB) $(PCAPLIB) $(LNETLIB)
+	$(CC) $(LDFLAGS) -o $@ sshow.o pcaputil.o $(NIDSLIB) $(PCAPLIB) $(LNETLIB) $(LIBS) 
 
 tcpkill: tcpkill.o pcaputil.o libmissing.a
-	$(CC) $(LDFLAGS) -o $@ tcpkill.o pcaputil.o $(LIBS) $(PCAPLIB) $(LNETLIB)
+	$(CC) $(LDFLAGS) -o $@ tcpkill.o pcaputil.o $(PCAPLIB) $(LNETLIB) $(LIBS) 
 
 tcpnice: tcpnice.o pcaputil.o libmissing.a
-	$(CC) $(LDFLAGS) -o $@ tcpnice.o pcaputil.o $(LIBS) $(PCAPLIB) $(LNETLIB)
+	$(CC) $(LDFLAGS) -o $@ tcpnice.o pcaputil.o $(PCAPLIB) $(LNETLIB) $(LIBS) 
 
 tcphijack: tcphijack.o pcaputil.o libmissing.a
-	$(CC) $(LDFLAGS) -o $@ tcphijack.o pcaputil.o $(LIBS) $(PCAPLIB) $(LNETLIB)
+	$(CC) $(LDFLAGS) -o $@ tcphijack.o pcaputil.o $(PCAPLIB) $(LNETLIB) $(LIBS) 
 
 urlsnarf: urlsnarf.o base64.o buf.o pcaputil.o libmissing.a
-	$(CC) $(LDFLAGS) -o $@ urlsnarf.o base64.o buf.o pcaputil.o $(LIBS) $(NIDSLIB) $(PCAPLIB) $(LNETLIB)
+	$(CC) $(LDFLAGS) -o $@ urlsnarf.o base64.o buf.o pcaputil.o $(NIDSLIB) $(PCAPLIB) $(LNETLIB) $(LIBS) 
 
 webmitm: webmitm.o base64.o buf.o decode_http.o record.o libmissing.a
-	$(CC) $(LDFLAGS) -o $@ webmitm.o base64.o buf.o decode_http.o record.o $(LIBS) $(LNETLIB) $(DBLIB) $(SSLLIB) $(TIRPCLIB)
+	$(CC) $(LDFLAGS) -o $@ webmitm.o base64.o buf.o decode_http.o record.o $(LNETLIB) $(DBLIB) $(SSLLIB) $(TIRPCLIB) $(LIBS) 
 
 webspy: webspy.o base64.o buf.o remote.o libmissing.a
-	$(CC) $(LDFLAGS) -o $@ webspy.o base64.o buf.o remote.o $(LIBS) $(NIDSLIB) $(PCAPLIB) $(LNETLIB) $(X11LIB)
+	$(CC) $(LDFLAGS) -o $@ webspy.o base64.o buf.o remote.o $(NIDSLIB) $(PCAPLIB) $(LNETLIB) $(X11LIB) $(LIBS) 
 
 install:
 	test -d $(install_prefix)$(sbindir) || \

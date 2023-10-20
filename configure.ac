@@ -43,7 +43,7 @@ AC_FUNC_MEMCMP
 AC_FUNC_STRFTIME
 AC_CHECK_FUNCS(gethostname socket strdup strstr)
 AC_CHECK_LIB(rpcsvc, xdr_fhstatus)
-AC_CHECK_LIB([tirpc], [clnt_tli_create], [X_TIRPC_LIB="-ltirpc"]) 
+AC_CHECK_LIB([tirpc], [clnt_tli_create], [X_TIRPC_LIB="-ltirpc"])
 AC_SUBST(X_TIRPC_LIB)
 AC_CHECK_LIB([ibverbs], [ibv_close_device], [X_IBVERBS_LIB="-libverbs"])
 AC_SUBST(X_IBVERBS_LIB)
@@ -86,6 +86,13 @@ AC_ARG_ENABLE([static],
 	        [AS_HELP_STRING([--enable-static],[Compile static binary])],
 		[enable_static="yes"; LDFLAGS_STATIC="-static"], [enable_static="no"])
 AC_MSG_RESULT([$enable_static])
+
+if test "x$enable_static" = "xyes"; then
+   dnl -static requires to satisfy forward-dependencies
+   AC_CHECK_LIB([glib-2.0], [g_mutex_init])
+   AC_CHECK_LIB([gthread-2.0], [g_thread_init])
+   AC_CHECK_LIB([intl], [libintl_gettext])
+fi
 
 dnl Checks for Berkeley DB
 AC_MSG_CHECKING(for Berkeley DB with 1.85 compatibility)
