@@ -1,13 +1,14 @@
-Resurrection and enhancements of [Dug Song's](https://en.wikipedia.org/wiki/W00w00) all-time-classic network sniffer:
+## Resurrection and enhancements of [Dug Song's](https://en.wikipedia.org/wiki/W00w00) all-time-classic network sniffer:
 
-* Support for hidden command line options (`ENV_ARGS=`).
-* SNI and SSH-banner decoder (`-v`).
-* HTTP parsing improvements & logs Cookies.
-* Anit-Duplicate. Reports every result only once.
+* Hides the command line options (`ENV_ARGS=`) from the process list (`ps`).
+* Decodes SNI and SSH-banners (`-v`).
+* HTTP parsing improvements & Cookie logging.
+* No duplicates: Reports each result only once.
 * Stand-alone & static binary (no need for dsniff.magic/dsniff.services)
-* DPI (`-m`). Port agnostic.
+* Deep-Packet-Inspection (`-m`). Port agnostic.
 
-Compare to the [original](https://packages.debian.org/source/unstable/dsniff): [Diff](https://github.com/hackerschoice/dsniff/compare/orig...main)
+
+Download the [Pre Compiled Static Binary](https://github.com/hackerschoice/dsniff/releases/latest) for Linux, FreeBSD and OpenBSD.
 
 Run (example):
 ```sh
@@ -16,21 +17,27 @@ export ENV_ARGS="-i eth0 -P -v -m" # hide options from the process list
 ```
 
 The reason why I prefer dsniff over most others:
-1. It detects traffic on any port (like SSH on port 31337).
-2. The results give a quick overview who/where SSL/SSH is used.
-4. It logs Cookies.
+1. The results give a quick overview who/where SSL/SSH is being used.
+1. It logs Cookies and Session IDs.
+1. It shows plaintext HTTP `Location: ` redirects to HTTPS.
+1. It shows WireGuard or SSH on non-default ports (like port 31337). Those tend to be worthy admins.
+
+![dsniff-thc-screenshot](https://github.com/hackerschoice/dsniff/assets/5938498/d3eeb16c-dd64-41f6-b839-ca7a70e34778)
 
 Compile:
 ```sh
 ./configure --enable static && make dsniff
 ```
+
+Compare to the [original](https://packages.debian.org/source/unstable/dsniff): [Diff](https://github.com/hackerschoice/dsniff/compare/orig...main)
+
 ---
 dsniff-2.3
 ----------
 ```
 
 i wrote these tools with honest intentions - to audit my own network,
-                     ^^^^^^^^THC: So did we!
+                     ^^^^^^^^THC: So did we :pPPpPpp
 and to demonstrate the insecurity of cleartext / weakly-encrypted
 network protocols and ad-hoc PKI. please do not abuse this software.
 
