@@ -43,12 +43,13 @@ int	Opt_snaplen = MIN_SNAPLEN;
 int	Opt_lines = MAX_LINES;
 int Opt_verbose = 0;
 int Opt_show_dups = 0;
+int Opt_color = 0;
 
 static void
 usage(void)
 {
 	fprintf(stderr, "Version: " VERSION "\n"
-		"Usage: dsniff [-cdamnPv] [-i interface | -p pcapfile] [-s snaplen]\n"
+		"Usage: dsniff [-cdamnPCv] [-i interface | -p pcapfile] [-s snaplen]\n"
 		"              [-f services] [-t trigger[,...]] [-r|-w savefile]\n"
 		"              [expression]\n");
 	exit(1);
@@ -155,10 +156,16 @@ main(int argc, char *argv[])
 	env2argv(&argc, &argv);
 	services = savefile = triggers = magics = NULL;
 	
-	while ((c = getopt(argc, argv, "PvcdaM:f:i:mnp:r:s:t:w:h?V")) != -1) {
+	if (isatty(STDOUT_FILENO))
+		Opt_color = 1;
+
+	while ((c = getopt(argc, argv, "PCvcdaM:f:i:mnp:r:s:t:w:h?V")) != -1) {
 		switch (c) {
 		case 'P':
 			nids_params.promisc = 0;
+			break;
+		case 'C':
+			Opt_color = 2; // FORCED
 			break;
 		case 'v':
 			Opt_verbose = 1;
@@ -215,6 +222,8 @@ main(int argc, char *argv[])
 	
 	if (Opt_read && Opt_write)
 		usage();
+	if (Opt_write && (Opt_color < 2))
+		Opt_color = 0; // Disable color for to DB.
 	
 	if (!record_init(savefile))
 		err(1, "record_init");

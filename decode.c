@@ -231,7 +231,7 @@ ascii_string(u_char *buf, int sz) {
 		if (*ptr == 0x00)
 			break;
 		if (!isascii(*ptr)) {
-			*ptr = '.';
+			*ptr = '?';
 		}
 		ptr++;
 	}
@@ -241,5 +241,68 @@ ascii_string(u_char *buf, int sz) {
 		*ptr = '\0';
 
 	return buf;
+}
+
+u_char *
+color_domain(u_char *dst, size_t dsz, u_char *src) {
+	int n = 0;
+	u_char *ptr = src + strlen(src);
+
+	while ((n < 2) && (src < ptr--)) { if (*ptr != '.') continue; n++; }
+	if (n >= 2) {
+		*ptr = '\0';
+		snprintf(dst, dsz, CUL CM"%s"CUL CDM".%s"CN, src, ptr + 1);
+	} else
+		snprintf(dst, dsz, CUL CDM"%s"CN, src);
+
+	return dst;
+}
+
+struct _ip_colors {
+	char *pre;
+	char *mid;
+	char *suf;
+};
+
+struct _ip_colors ipcol[] = {
+	{CDC, CC CF, CN CC},
+	{CDR, CR CF, CN CR},
+	{CDG, CG CF, CN CG},
+	{CDB, CB CF, CN CB},
+	{CDY, CY CF, CN CY},
+	{CDM, CM CF, CN CM}
+};
+
+#ifndef int_ntoa
+# define int_ntoa(x)    inet_ntoa(*((struct in_addr *)&x))
+#endif
+
+// Assign a random color scheme to an IP.
+u_char *
+color_ip(u_char *dst, size_t dsz, in_addr_t ip) {
+	char *pre, *suf, *mid;
+	char *src = int_ntoa(ip);
+	char *end = src + strlen(src);
+	char *pos[3];
+	int n = 3;
+
+	while ((n > 0) && (src < end--)) {
+		if (*end != '.')
+			continue;
+
+		pos[--n] = end;
+	}
+	if (n > 0) {
+		// Not '3' dots. Not an IPv4
+		snprintf(dst, dsz, "%d %s", n, src);
+		return dst;
+	}
+
+	struct _ip_colors *ipc = &ipcol[crc32(&ip, sizeof ip) % (sizeof ipcol / sizeof *ipcol)];
+
+	*pos[0] = *pos[2] = '\0';
+	snprintf(dst, dsz, "%s%s.%s%s.%s%s"CN, ipc->pre, src, ipc->mid, pos[0] + 1, ipc->suf, pos[2] + 1);
+
+	return dst;
 }
 

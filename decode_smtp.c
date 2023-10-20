@@ -20,6 +20,8 @@
 #include "options.h"
 #include "decode.h"
 
+extern struct _dc_meta dc_meta;
+
 int
 decode_smtp(u_char *buf, int len, u_char *obuf, int olen)
 {
@@ -45,6 +47,7 @@ decode_smtp(u_char *buf, int len, u_char *obuf, int olen)
 			j = strlen(obuf);
 			snprintf(obuf + j, olen - j, " [%s]\n", p);
 			login = 1;
+			dc_meta.is_hot = 1;
 		}
 		else if (strncmp(p, "MAIL ", 5) == 0 ||
 			 strncmp(p, "RCPT ", 5) == 0 ||

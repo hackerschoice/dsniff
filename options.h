@@ -21,6 +21,7 @@ extern int	Opt_snaplen;
 extern int	Opt_lines;
 extern int	Opt_verbose;
 extern int	Opt_show_dups;
+extern int	Opt_color;
 
 #endif /* OPTIONS_H */
 
