@@ -24,6 +24,7 @@
 #include "base64.h"
 #include "buf.h"
 #include "decode.h"
+#include "crc32.h"
 
 #define USER_REGEX	".*account.*|.*acct.*|.*domain.*|.*login.*|" \
 			".*member.*|.*user.*|.*name|.*email|.*_id|" \
@@ -104,7 +105,7 @@ decode_http(u_char *buf, int len, u_char *obuf, int olen)
 	int i;
 	int is_sec;
 	int is_query_auth;
-	int is_http_ok = 1;
+	int is_http_ok = 1; // default assume OK
 	char dom[1024];
 	char *type;
 	char *uri_prot;
@@ -224,7 +225,9 @@ decode_http(u_char *buf, int len, u_char *obuf, int olen)
 					} else
 						buf_putf(&outbuf, CB"%s"CDC" %s"CN, type, uri_prot);
 				}
-			}
+			} else
+				buf_putf(&outbuf, "%s", req);
+
 			if (http_resp)
 				buf_putf(&outbuf, " >>> %s", http_resp);
 			if (is_sec) 
@@ -233,7 +236,7 @@ decode_http(u_char *buf, int len, u_char *obuf, int olen)
 			// DUP check up to '?'
 			// Anti-Fuzzing: Ignore requests to same host with different 'req' but log if Cookie/Auth is supplied
 			// On "-vv" add URI to CRC (and thus log different URIs)
-			if ((!Opt_show_dups) && ((is_sec) || (Opt_verbose >= 2)) ) {
+			if ((!Opt_show_dups) && (is_http_ok) && ((is_sec) || (Opt_verbose >= 2)) ) {
 				// Only dup-check up to "?"
 				if (query)
 					dc_update(&dc_meta, req, query - 1 - req);
@@ -266,8 +269,12 @@ decode_http(u_char *buf, int len, u_char *obuf, int olen)
 					buf_putf(&outbuf, "\n"CDR"Cookie"CN": %s", cookie);
 				else
 					buf_putf(&outbuf, "\nCookie: %s", cookie);
-				// Dont catch 'expires=<>' timer. FIXME: Should really disect the cookie and match for 'expires='
-				dc_update(&dc_meta, cookie, MIN(64, strlen(cookie)));
+				// Dont catch 'expires=<>' timer (limit to 64). FIXME: Should really disect the cookie and match for 'expires='
+				// Prevent Fuzzing from flooding our log => Use max of 19 dubdb-slots
+				if (!Opt_show_dups) {
+					uint8_t fuzz = crc32(cookie, MIN(64, strlen(cookie))) % 19;
+					dc_update(&dc_meta, &fuzz, 1);
+				}
 			}
 			if (pauth) {
 				buf_putf(&outbuf, "\n%s", pauth);
