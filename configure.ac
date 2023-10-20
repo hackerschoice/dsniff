@@ -89,9 +89,9 @@ AC_MSG_RESULT([$enable_static])
 
 if test "x$enable_static" = "xyes"; then
    dnl -static requires to satisfy forward-dependencies
+   AC_CHECK_LIB([intl], [libintl_gettext])
    AC_CHECK_LIB([glib-2.0], [g_mutex_init])
    AC_CHECK_LIB([gthread-2.0], [g_thread_init])
-   AC_CHECK_LIB([intl], [libintl_gettext])
 fi
 
 dnl Checks for Berkeley DB
