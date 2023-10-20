@@ -246,14 +246,25 @@ ascii_string(u_char *buf, int sz) {
 u_char *
 color_domain(u_char *dst, size_t dsz, u_char *src) {
 	int n = 0;
-	u_char *ptr = src + strlen(src);
+	u_char *end = src + strlen(src);
+	int is_ip = 1;
 
-	while ((n < 2) && (src < ptr--)) { if (*ptr != '.') continue; n++; }
-	if (n >= 2) {
-		*ptr = '\0';
-		snprintf(dst, dsz, CUL CM"%s"CUL CDM".%s"CN, src, ptr + 1);
+	while ((n < 2) && (src < end--)) {
+		if (*end == '.') {
+			n++;
+			continue;
+		}
+		if (!isdigit(*end))
+			is_ip = 0;
+	}
+
+	if ((!is_ip) && (n >= 2)) {
+		*end = '\0';
+		snprintf(dst, dsz, CM "%s"CDM ".%s"CN, src, end + 1);
+		// snprintf(dst, dsz, CM CUL"%s"CDM CUL".%s"CN, src, end + 1);
 	} else
-		snprintf(dst, dsz, CUL CDM"%s"CN, src);
+		snprintf(dst, dsz, CDM "%s"CN, src);
+		// snprintf(dst, dsz, CDM CUL"%s"CN, src);
 
 	return dst;
 }
@@ -298,7 +309,8 @@ color_ip(u_char *dst, size_t dsz, in_addr_t ip) {
 		return dst;
 	}
 
-	struct _ip_colors *ipc = &ipcol[crc32(&ip, sizeof ip) % (sizeof ipcol / sizeof *ipcol)];
+	// Pick color by /24 
+	struct _ip_colors *ipc = &ipcol[crc32(&ip, 3) % (sizeof ipcol / sizeof *ipcol)];
 
 	*pos[0] = *pos[2] = '\0';
 	snprintf(dst, dsz, "%s%s.%s%s.%s%s"CN, ipc->pre, src, ipc->mid, pos[0] + 1, ipc->suf, pos[2] + 1);
