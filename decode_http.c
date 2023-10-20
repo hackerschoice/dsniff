@@ -106,6 +106,8 @@ decode_http(u_char *buf, int len, u_char *obuf, int olen)
 	int is_query_auth;
 	int is_http_ok = 1;
 	char dom[1024];
+	char *type;
+	char *uri_prot;
 
 	buf_init(&inbuf, buf, len);
 	buf_init(&outbuf, obuf, olen);
@@ -144,14 +146,18 @@ decode_http(u_char *buf, int len, u_char *obuf, int olen)
 		if ((req = strtok(buf_ptr(msg), "\r\n")) == NULL)
 			continue;
 
-		if (strncmp(req, "GET ", 4) != 0 &&
-		    strncmp(req, "POST ", 5) != 0 &&
-		    strncmp(req, "CONNECT ", 8) != 0)
+		if (strncmp(req, "GET ", 4) == 0) {
+			type = "GET"; uri_prot = req + 4; 
+		} else if (strncmp(req, "POST ", 5) == 0) {
+			type = "POST"; uri_prot = req + 5;
+		} else if (strncmp(req, "CONNECT ", 8) == 0) {
+			type = "CONNECT"; uri_prot = req + 8;
+		} else
 			continue;
 
 		auth = pauth = query = host = cookie = agent = NULL;
 
-		if ((query = strchr(req, '?')) != NULL)
+		if ((query = strchr(uri_prot, '?')) != NULL)
 			query++;
 
 		while ((p = strtok(NULL, "\r\n")) != NULL) {
@@ -173,7 +179,7 @@ decode_http(u_char *buf, int len, u_char *obuf, int olen)
 			else if (strncasecmp(p, "User-Agent: ", 12) == 0) {
 				agent = p;
 			}
-			else if (req[0] == 'P') {
+			else if (type[0] == 'P') {
 				if (strncmp(p, "Content-type: ", 14) == 0) {
 					if (strncmp(p + 14, "application/"
 						    "x-www-form-urlencoded",
@@ -201,14 +207,26 @@ decode_http(u_char *buf, int len, u_char *obuf, int olen)
 			if (buf_tell(&outbuf) > 0)
 				buf_putf(&outbuf, "\n\n");
 			
-			if (req[0] == 'G' && auth) {
+			if (type[0] == 'G' && auth) {
 				req = http_req_dirname(req);
 			}
 
+			if (Opt_color) {
+				if (query) {
+					*(query - 1) = '\0';
+					buf_putf(&outbuf, CB"%s"CDC" %s"CN"?%s", type, uri_prot, query);
+					*(query -1) = '?';
+				} else {
+					if (p = strchr(uri_prot, ' ')) {
+						*p = '\0';
+						buf_putf(&outbuf, CB"%s"CDC" %s"CN" %s", type, uri_prot, p+1);
+						*p = ' ';
+					} else
+						buf_putf(&outbuf, CB"%s"CDC" %s"CN, type, uri_prot);
+				}
+			}
 			if (http_resp)
-				buf_putf(&outbuf, "%s >>> %s", req, http_resp);
-			else
-				buf_putf(&outbuf, "%s", req);
+				buf_putf(&outbuf, " >>> %s", http_resp);
 			if (is_sec) 
 				dc_meta.is_hot = 1;
 			
@@ -217,8 +235,8 @@ decode_http(u_char *buf, int len, u_char *obuf, int olen)
 			// On "-vv" add URI to CRC (and thus log different URIs)
 			if ((!Opt_show_dups) && ((is_sec) || (Opt_verbose >= 2)) ) {
 				// Only dup-check up to "?"
-				if (p = strchr(req, '?'))
-					dc_update(&dc_meta, req, p - req);
+				if (query)
+					dc_update(&dc_meta, req, query - 1 - req);
 				else
 					dc_update(&dc_meta, req, strlen(req));
 			}
@@ -268,7 +286,7 @@ decode_http(u_char *buf, int len, u_char *obuf, int olen)
 				p[i] = '\0';
 				buf_putf(&outbuf, " [%s]", p);
 			}
-			else if (req[0] == 'P' && query) {
+			else if (type[0] == 'P' && query) {
 				if (is_query_auth)
 					dc_update(&dc_meta, "AUTHDUMMY", 1); // XXX HACK to log any POST req. only ONCE.
 				buf_putf(&outbuf,

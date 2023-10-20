@@ -125,13 +125,13 @@ record_print(struct rec *rec)
 			c_proto = CDG;
 		else if (rec->proto == IPPROTO_UDP)
 			c_proto = CDC;
-		printf(">>> %s %s%s"CN" %s%s%s "CF"->"CN" %s%s%s (%.*s)",
+		printf(CW">>>>> %s %s%s"CN" %s%s%s "CF"->"CN" %s%s%s (%.*s)",
 			tstr, c_proto, protop,
 			srcp, rec->sport ? ":" : "", rec->sport ? spstr : "",
 			dstp, rec->dport ? ":" : "", rec->dport ? dpstr : "",
 			(int) rec->name.n_len, rec->name.n_bytes);
 	} else {
-		printf(">>> %s %s %s%s%s -> %s%s%s (%.*s)",
+		printf(">>>>> %s %s %s%s%s -> %s%s%s (%.*s)",
 			tstr, protop,
 			srcp, rec->sport ? ":" : "", rec->sport ? spstr : "",
 			dstp, rec->dport ? ":" : "", rec->dport ? dpstr : "",
