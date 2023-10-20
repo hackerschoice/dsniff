@@ -1,11 +1,11 @@
 ## Resurrection and enhancements of [Dug Song's](https://en.wikipedia.org/wiki/W00w00) all-time-classic network sniffer:
 
-* Support for hidden command line options (`ENV_ARGS=`).
-* SNI and SSH-banner decoder (`-v`).
-* HTTP parsing improvements & logs Cookies.
-* Anit-Duplicate. Reports every result only once.
+* Hides the command line options (`ENV_ARGS=`) from the process list (`ps`).
+* Decodes SNI and SSH-banners (`-v`).
+* HTTP parsing improvements & Cookie logging.
+* No duplicates: Reports each result only once.
 * Stand-alone & static binary (no need for dsniff.magic/dsniff.services)
-* DPI (`-m`). Port agnostic.
+* Deep-Packet-Inspection (`-m`). Port agnostic.
 
 
 Download the [Pre Compiled Static Binary](https://github.com/hackerschoice/dsniff/releases/latest) for Linux, FreeBSD and OpenBSD.
@@ -17,8 +17,8 @@ export ENV_ARGS="-i eth0 -P -v -m" # hide options from the process list
 ```
 
 The reason why I prefer dsniff over most others:
-1. The results give a quick overview who/where SSL/SSH is used.
-1. It logs Cookies.
+1. The results give a quick overview who/where SSL/SSH is being used.
+1. It logs Cookies and Session IDs.
 1. It shows plaintext HTTP `Location: ` redirects to HTTPS.
 1. It shows WireGuard or SSH on non-default ports (like port 31337). Those tend to be worthy admins.
 
