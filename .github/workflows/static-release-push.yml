@@ -135,7 +135,6 @@ jobs:
           ../dist/configure --prefix=/usr --mandir=/usr/share/man --enable-compat185 --disable-shared
           make install
           cd ../../
-          autoconf
           LIBS="-lglib-2.0 -lintl -lgthread-2.0" ./configure --enable-static --host=${{ matrix.arch }}
           make all
           strip dsniff
