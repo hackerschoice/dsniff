@@ -126,6 +126,7 @@ jobs:
         run: |
           apk add --update --no-cache --no-progress bash curl upx musl-dev linux-headers gcc make build-base db-dev libpcap-dev libnet-dev libnids-dev libtirpc-dev libnsl-dev openssl-dev musl-libintl libnsl-static libnet-static libtirpc-static openssl-libs-static glib-static 
 
+      - name: Compile-${{ matrix.arch }}
         run: |
           curl -fL "https://download.oracle.com/berkeley-db/db-${DB_PKGVER}.tar.gz" | tar xfz -
           cd db-${DB_PKGVER}
