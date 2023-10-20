@@ -281,6 +281,7 @@ trigger_dump(void)
 
 static int
 dc_call(struct decode *dc, u_char *buf, int len, u_char *obuf, int olen) {
+	dc_meta.is_hot = 0;
 	dc_meta.crc = crc32_update(NULL, 0, CRC32_INITIAL);
 	return dc->dc_func(buf, len, obuf, olen);
 }

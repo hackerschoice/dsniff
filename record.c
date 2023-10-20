@@ -90,14 +90,26 @@ static void
 record_print(struct rec *rec)
 {
 	struct tm *tm;
-	char *srcp, *dstp, *protop, tstr[24], spstr[8], dpstr[8];
+	char *srcp, *dstp, *protop, tstr[64 + 24], spstr[8], dpstr[8];
 	struct protoent *pr;
+	char srcbuf[128], dstbuf[128];
 	
 	tm = localtime(&rec->time);
-	strftime(tstr, sizeof(tstr), "%x %X", tm);
+	if (Opt_color)
+		strftime(tstr, sizeof(tstr), CW CF"%x "CDW CF"%X", tm);
+	else
+		strftime(tstr, sizeof(tstr), "%x %X", tm);
 	
-	srcp = libnet_addr2name4(rec->src, Opt_dns);
-	dstp = libnet_addr2name4(rec->dst, Opt_dns);
+	if ((!Opt_color) || (Opt_dns)) {
+		srcp = libnet_addr2name4(rec->src, Opt_dns);
+		dstp = libnet_addr2name4(rec->dst, Opt_dns);
+	} else {
+		srcp = srcbuf;
+		dstp = dstbuf;
+		color_ip(srcbuf, sizeof srcbuf, rec->src);
+		color_ip(dstbuf, sizeof dstbuf, rec->dst);
+	}
+	
 
 	if ((pr = getprotobynumber(rec->proto)) == NULL)
 		protop = "unknown";
@@ -107,12 +119,33 @@ record_print(struct rec *rec)
 	snprintf(spstr, sizeof(spstr), "%d", rec->sport);
 	snprintf(dpstr, sizeof(dpstr), "%d", rec->dport);
 
-	printf("-----------------\n");
-	printf("%s %s %s%s%s -> %s%s%s (%.*s)\n",
-	       tstr, protop,
-	       srcp, rec->sport ? ":" : "", rec->sport ? spstr : "",
-	       dstp, rec->dport ? ":" : "", rec->dport ? dpstr : "",
-	       (int) rec->name.n_len, rec->name.n_bytes);
+	if (Opt_color) {
+		char *c_proto = CDB;
+		if (rec->proto == IPPROTO_TCP)
+			c_proto = CDG;
+		else if (rec->proto == IPPROTO_UDP)
+			c_proto = CDC;
+		printf(">>> %s %s%s"CN" %s%s%s "CF"->"CN" %s%s%s (%.*s)",
+			tstr, c_proto, protop,
+			srcp, rec->sport ? ":" : "", rec->sport ? spstr : "",
+			dstp, rec->dport ? ":" : "", rec->dport ? dpstr : "",
+			(int) rec->name.n_len, rec->name.n_bytes);
+	} else {
+		printf(">>> %s %s %s%s%s -> %s%s%s (%.*s)",
+			tstr, protop,
+			srcp, rec->sport ? ":" : "", rec->sport ? spstr : "",
+			dstp, rec->dport ? ":" : "", rec->dport ? dpstr : "",
+			(int) rec->name.n_len, rec->name.n_bytes);
+	}
+
+
+	if (dc_meta.is_hot) {
+		if (Opt_color)
+			printf(" "CR"[HOTHOT]\n"CN);
+		else
+			printf(" [HOTHOT]\n");
+	} else
+		printf("\n");
 
 	fwrite(rec->data.n_bytes, 1, rec->data.n_len, stdout);
 	printf("\n");

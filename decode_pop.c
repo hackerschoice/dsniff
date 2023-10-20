@@ -22,6 +22,8 @@
 #include "options.h"
 #include "decode.h"
 
+extern struct _dc_meta dc_meta;
+
 int
 decode_poppass(u_char *buf, int len, u_char *obuf, int olen)
 {
@@ -127,6 +129,7 @@ decode_pop(u_char *buf, int len, u_char *obuf, int olen)
 			strlcat(obuf, "] password [", olen);
 			strlcat(obuf, password, olen);
 			strlcat(obuf, "]\n", olen);
+			dc_meta.is_hot = 1;
 
 			mode = NONE;
 		}

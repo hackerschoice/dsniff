@@ -11,6 +11,9 @@
 #ifndef DECODE_H
 #define DECODE_H
 
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 #include <stdint.h>
 
 typedef int (*decode_func)(u_char *, int, u_char *, int);
@@ -25,7 +28,26 @@ struct _dc_meta {
 	u_char *rbuf;  // reverse connection
 	int rlen;
 	uint32_t crc;
+	int is_hot;  // found a password or vulnerability
 };
+// ANSI color codes.
+#define CDR        "\033[0;31m"
+#define CDG        "\033[0;32m"
+#define CDY        "\033[0;33m"
+#define CDB        "\033[0;34m"
+#define CDM        "\033[0;35m"
+#define CDC        "\033[0;36m"
+#define CDW        "\033[0;37m"
+#define CR         "\033[1;31m"
+#define CG         "\033[1;32m"
+#define CY         "\033[1;33m"
+#define CN         "\033[0m"
+#define CB         "\033[1;34m"
+#define CM         "\033[1;35m"
+#define CC         "\033[1;36m"
+#define CW         "\033[1;37m"
+#define CF         "\033[2m"   // faint
+#define CUL        "\033[4m"   // underlined
 
 struct decode *getdecodebyname(const char *name);
 
@@ -54,6 +76,8 @@ int	strip_lines(char *buf, int max_lines);
 void dc_update(struct _dc_meta *m, const void *buf, size_t len);
 int	is_ascii_string(char *buf, int len);
 u_char * ascii_string(u_char *buf, int sz);
+u_char *color_domain(u_char *dst, size_t dsz, u_char *src);
+u_char *color_ip(u_char *dst, size_t dsz, in_addr_t ip);
 
 u_char *bufbuf(u_char *big, int blen, u_char *little, int llen);
 

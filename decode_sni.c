@@ -42,6 +42,8 @@ decode_sni(u_char *buf, int len, u_char *obuf, int olen) {
 	struct tls_ch *ch;
 	uint16_t hls;
 	uint16_t type;
+	u_char *str;
+	char dom[1024];
 
 	if (!Opt_verbose)
 		return 0;
@@ -116,7 +118,12 @@ decode_sni(u_char *buf, int len, u_char *obuf, int olen) {
 
 		if (ptr + hls + 1 >= end) // SNI is never the last. Make sure there is \0 for the \0.
 			goto err;
-		snprintf(obuf, olen, "SNI: %s", ascii_string(ptr, hls + 1));
+
+		str = ascii_string(ptr, hls + 1);
+		if (Opt_color) {
+			snprintf(obuf, olen, CDY"SNI"CN": %s", color_domain(dom, sizeof dom, str));
+		} else
+			snprintf(obuf, olen, "SNI: %s", str);
 
 		break;
 	}

@@ -100,11 +100,12 @@ int
 decode_http(u_char *buf, int len, u_char *obuf, int olen)
 {
 	struct buf *msg, inbuf, outbuf;
-	char *p, *req, *auth, *pauth, *query, *host, *cookie, *agent, *http_resp = NULL;
+	char *p, *req, *auth, *pauth, *query, *host, *cookie, *agent, *location = NULL, *http_resp = NULL;
 	int i;
 	int is_sec;
 	int is_query_auth;
 	int is_http_ok = 1;
+	char dom[1024];
 
 	buf_init(&inbuf, buf, len);
 	buf_init(&outbuf, obuf, olen);
@@ -118,13 +119,23 @@ decode_http(u_char *buf, int len, u_char *obuf, int olen)
 		    regcomp(pass_regex, PASS_REGEX, REGEX_FLAGS))
 			errx(1, "regcomp failed");
 	}
-	if ((dc_meta.rbuf) && (p = strtok(dc_meta.rbuf, "\r\n"))) {
-		size_t sz = strlen(p);
-		if ((sz > 12) && (p[9] != '2'))
-			is_http_ok = 0;
-		http_resp = p + 9;
-	}
 	is_sec = 0;
+	if ((dc_meta.rbuf) && (p = strtok(dc_meta.rbuf, "\r\n")) && (strlen(p) > 12)) {
+		http_resp = p + 9;
+		if (p[9] != '2')
+			is_http_ok = 0;
+		if (p[9] == '3') {
+			while ((p = strtok(NULL, "\r\n")) != NULL) {
+				if (strncasecmp(p, "Location: ", 10) != 0)
+					continue;
+
+				location = p + 10;
+				if (strstr(location, "https://"))
+					is_sec = 1; // http -> https redirects can be intercepted.
+				break;
+			}
+		}
+	}
 	while ((i = buf_index(&inbuf, "\r\n\r\n", 4)) >= 0) {
 		msg = buf_tok(&inbuf, NULL, i);
 		msg->base[msg->end] = '\0';
@@ -153,10 +164,10 @@ decode_http(u_char *buf, int len, u_char *obuf, int olen)
 				is_sec = 1;
 			}
 			else if (strncasecmp(p, "Host: ", 6) == 0) {
-				host = p;
+				host = p + 6;
 			}
 			else if (strncasecmp(p, "Cookie: ", 8) == 0) {
-				cookie = p;
+				cookie = p + 8;
 				is_sec = 1;
 			}
 			else if (strncasecmp(p, "User-Agent: ", 12) == 0) {
@@ -181,8 +192,11 @@ decode_http(u_char *buf, int len, u_char *obuf, int olen)
 			}
 		}
 		is_query_auth = 0;
-		if (query)
+		if (query) {
 			is_query_auth = grep_query_auth(query);
+			if (is_query_auth)
+				is_sec = 1;
+		}
 		if (Opt_verbose || cookie || auth || pauth || is_query_auth) {
 			if (buf_tell(&outbuf) > 0)
 				buf_putf(&outbuf, "\n\n");
@@ -195,6 +209,9 @@ decode_http(u_char *buf, int len, u_char *obuf, int olen)
 				buf_putf(&outbuf, "%s >>> %s", req, http_resp);
 			else
 				buf_putf(&outbuf, "%s", req);
+			if (is_sec) 
+				dc_meta.is_hot = 1;
+			
 			// DUP check up to '?'
 			// Anti-Fuzzing: Ignore requests to same host with different 'req' but log if Cookie/Auth is supplied
 			// On "-vv" add URI to CRC (and thus log different URIs)
@@ -207,15 +224,32 @@ decode_http(u_char *buf, int len, u_char *obuf, int olen)
 			}
 			
 			if (host) {
-				buf_putf(&outbuf, "\n%s", host);
-				dc_update(&dc_meta, host + 6, strlen(host + 6));
+				if (Opt_color)
+					buf_putf(&outbuf, "\n"CDY"Host"CN": %s", color_domain(dom, sizeof dom, host));
+				else
+					buf_putf(&outbuf, "\nHost: %s", host);
+
+				dc_update(&dc_meta, host, strlen(host));
 			}
+
+			if (location) {
+				if (Opt_color)
+					buf_putf(&outbuf, "\n"CDY"Location"CN": "CDR"%s"CN, location);
+				else
+					buf_putf(&outbuf, "\nLocation: %s", location);
+				location = NULL;
+				break; // Stop on LOCATION reply.
+			}
+
 			if (agent)
 				buf_putf(&outbuf, "\n%s", agent);
 			if (cookie) {
-				buf_putf(&outbuf, "\n%s", cookie);
+				if (Opt_color)
+					buf_putf(&outbuf, "\n"CDR"Cookie"CN": %s", cookie);
+				else
+					buf_putf(&outbuf, "\nCookie: %s", cookie);
 				// Dont catch 'expires=<>' timer. FIXME: Should really disect the cookie and match for 'expires='
-				dc_update(&dc_meta, cookie + 8, MIN(64, strlen(cookie + 8)));
+				dc_update(&dc_meta, cookie, MIN(64, strlen(cookie)));
 			}
 			if (pauth) {
 				buf_putf(&outbuf, "\n%s", pauth);

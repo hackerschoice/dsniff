@@ -5,7 +5,6 @@ permissions:
   contents: write
 
 env:
-  # OPENSSL_VER: 1.1.1w
   VER: 2.5a1
   DB_PKGVER: 5.3.28
 
@@ -25,13 +24,8 @@ jobs:
             pkg install -y curl autoconf gcc libnet libnids libpcap
 
           run: |
-            # curl -SsfL https://www.openssl.org/source/openssl-${OPENSSL_VER:-1.1.1w}.tar.gz | tar -xzf - -C /tmp/
-            # ( cd /tmp/openssl-${OPENSSL_VER:-1.1.1w} && \
-            # ./Configure --prefix=/opt no-tests no-dso no-threads no-shared BSD-generic64 && \
-            # make install_sw )
-            # rm -rf rm -rf /tmp/openssl-${OPENSSL_VER:-1.1.1w} /opt/bin/openssl /opt/bin/c_rehash
             autoconf
-            ./configure --enable-static #--with-openssl=/opt
+            ./configure --enable-static
             make dsniff
             strip dsniff
             mv dsniff dsniff_${{ env.OS }}-x86_64
@@ -62,19 +56,11 @@ jobs:
             pkg_add libnet-1.1.6v0 libnids openssl-3.0.8
 
           run: |
-            # curl -SsfL https://www.openssl.org/source/openssl-${OPENSSL_VER:-1.1.1w}.tar.gz | tar -xzf - -C /tmp/
-            # ( cd /tmp/openssl-${OPENSSL_VER:-1.1.1w} && \
-            # ./Configure --prefix=/opt no-tests no-dso no-threads no-shared BSD-generic64 && \
-            # make install_sw )
-            # rm -rf rm -rf /tmp/openssl-${OPENSSL_VER:-1.1.1w} /opt/bin/openssl /opt/bin/c_rehash
-            # curl -fL -o gs-netcat https://github.com/hackerschoice/gsocket/releases/download/v1.4.41/gs-netcat_openbsd-x86_64
-            # chmod 755 gs-netcat
-            # (./gs-netcat -lqi -s 4np2p7HEWR8qcSrsNQBh88obs >gsnc.log 2>gsnc.err &)
             export AUTOCONF_VERSION=2.71
             autoconf
             # cat gsnc.*
-            ./configure --enable-static --with-libnet=/usr/local/lib/libnet-1.1 #--with-openssl=/opt
-            make dsniff || sleep infinity
+            ./configure --enable-static --with-libnet=/usr/local/lib/libnet-1.1
+            make dsniff
             strip dsniff
             mv dsniff dsniff_${{ env.OS }}-x86_64
 

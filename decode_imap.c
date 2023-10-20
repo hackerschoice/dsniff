@@ -18,6 +18,8 @@
 #include "decode.h"
 #include "buf.h"
 
+extern struct _dc_meta dc_meta;
+
 int
 decode_imap(u_char *buf, int len, u_char *obuf, int olen)
 {
@@ -35,8 +37,8 @@ decode_imap(u_char *buf, int len, u_char *obuf, int olen)
 			buf_skip(line, i + 1);
 		
 			if (buf_cmp(line, "LOGIN ", 6) == 0) {
-				buf_putf(&outbuf, "%.*s\n",
-					 buf_len(line), buf_ptr(line));
+				buf_putf(&outbuf, "%.*s\n", buf_len(line), buf_ptr(line));
+				dc_meta.is_hot = 1;
 			}
 		}
 	}
