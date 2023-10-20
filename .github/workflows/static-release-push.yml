@@ -140,7 +140,7 @@ jobs:
           make install
 
           cd ../../
-          LIBS="-lglib-2.0 -lintl -lgthread-2.0" ./configure --enable-static --host=${{ matrix.arch }}
+          ./configure --enable-static --host=${{ matrix.arch }}
           cat Makefile
           make dsniff || sleep infinity
           strip dsniff
