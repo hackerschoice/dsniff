@@ -1,0 +1,4 @@
+dsniff-*.tar.gz
+dsniff-*/
+info.txt
+**/.DS_Store
