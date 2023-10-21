@@ -2,3 +2,10 @@ dsniff-*.tar.gz
 dsniff-*/
 info.txt
 **/.DS_Store
+Makefile
+config.*
+*.a
+*.cache
+*.dat
+dsniff
+arpspoof
