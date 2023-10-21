@@ -35,7 +35,7 @@
 
 int	Opt_client = 0;
 int	Opt_debug = 0;
-u_short	Opt_dns = 1;
+u_short	Opt_dns = 0;
 int	Opt_magic = 0;
 int	Opt_read = 0;
 int	Opt_write = 0;
@@ -49,7 +49,7 @@ static void
 usage(void)
 {
 	fprintf(stderr, "Version: " VERSION "\n"
-		"Usage: dsniff [-cdamnPCv] [-i interface | -p pcapfile] [-s snaplen]\n"
+		"Usage: dsniff [-cdamNPCv] [-i interface | -p pcapfile] [-s snaplen]\n"
 		"              [-f services] [-t trigger[,...]] [-r|-w savefile]\n"
 		"              [expression]\n");
 	exit(1);
@@ -159,7 +159,7 @@ main(int argc, char *argv[])
 	if (isatty(STDOUT_FILENO))
 		Opt_color = 1;
 
-	while ((c = getopt(argc, argv, "PCvcdaM:f:i:mnp:r:s:t:w:h?V")) != -1) {
+	while ((c = getopt(argc, argv, "PCvcdaM:f:i:mNnp:r:s:t:w:h?V")) != -1) {
 		switch (c) {
 		case 'P':
 			nids_params.promisc = 0;
@@ -190,6 +190,9 @@ main(int argc, char *argv[])
 			break;
 		case 'm':
 			Opt_magic++;
+			break;
+		case 'N':
+			Opt_dns = 1;
 			break;
 		case 'n':
 			Opt_dns = 0;
