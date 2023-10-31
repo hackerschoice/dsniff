@@ -31,3 +31,9 @@ Compile:
 
 Compare [original](https://packages.debian.org/source/unstable/dsniff): [Diff](https://github.com/hackerschoice/dsniff/compare/orig...main)  
 Original [README](README)
+
+---
+Similar tools:
+* https://github.com/lgandx/PCredz
+* https://github.com/DanMcInerney/net-creds
+
