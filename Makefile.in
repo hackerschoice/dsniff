@@ -56,7 +56,7 @@ HDRS	= asn1.h base64.h buf.h decode.h hex.h magic.h options.h \
 	  crc32.h
 
 SRCS	= asn1.c base64.c buf.c hex.c magic.c mount.c pcaputil.c rpc.c \
-	  tcp_raw.c trigger.c record.c dsniff.c decode.c decode_aim.c \
+	  tcp_raw.c trigger.c record.c decode.c decode_aim.c \
 	  decode_citrix.c decode_cvs.c decode_ftp.c decode_hex.c \
 	  decode_http.c decode_icq.c decode_imap.c decode_irc.c \
 	  decode_ldap.c decode_mmxp.c decode_mountd.c decode_napster.c \
@@ -115,8 +115,8 @@ libmissing.a: $(LIBOBJS)
 	ar -cr $@ $(LIBOBJS)
 	$(RANLIB) $@
 
-dsniff: $(HDRS) $(SRCS) $(OBJS) libmissing.a
-	$(CC) $(LDFLAGS) -o $@ $(OBJS) $(NIDSLIB) $(PCAPLIB) $(LNETLIB) $(DBLIB) $(SSLLIB) $(TIRPCLIB) $(LIBS)
+dsniff: $(HDRS) $(SRCS) dsniff.o $(OBJS) libmissing.a
+	$(CC) $(LDFLAGS) -o $@ dsniff.o $(OBJS) $(NIDSLIB) $(PCAPLIB) $(LNETLIB) $(DBLIB) $(SSLLIB) $(TIRPCLIB) $(LIBS)
 
 arpspoof: arpspoof.o arp.o libmissing.a
 	$(CC) $(LDFLAGS) -o $@ arpspoof.o arp.o $(PCAPLIB) $(LNETLIB) $(LIBS) 
@@ -136,8 +136,8 @@ mailsnarf: mailsnarf.o buf.o pcaputil.o libmissing.a
 msgsnarf: msgsnarf.o buf.o pcaputil.o libmissing.a
 	$(CC) $(LDFLAGS) -o $@ msgsnarf.o buf.o pcaputil.o $(NIDSLIB) $(PCAPLIB) $(LNETLIB) $(LIBS) 
 
-sshmitm: sshmitm.o buf.o hex.o record.o ssh.o sshcrypto.o libmissing.a
-	$(CC) $(LDFLAGS) -o $@ sshmitm.o buf.o hex.o record.o ssh.o sshcrypto.o $(LNETLIB) $(DBLIB) $(SSLLIB) $(TIRPCLIB) $(LIBS)
+sshmitm: sshmitm.o $(OBJS) ssh.o sshcrypto.o libmissing.a
+	$(CC) $(LDFLAGS) -o $@ sshmitm.o ssh.o sshcrypto.o $(OBJS) $(NIDSLIB) $(PCAPLIB) $(LNETLIB) $(DBLIB) $(SSLLIB) $(TIRPCLIB) $(LIBS)
 
 sshow: sshow.o pcaputil.o libmissing.a
 	$(CC) $(LDFLAGS) -o $@ sshow.o pcaputil.o $(NIDSLIB) $(PCAPLIB) $(LNETLIB) $(LIBS) 
@@ -154,8 +154,8 @@ tcphijack: tcphijack.o pcaputil.o libmissing.a
 urlsnarf: urlsnarf.o base64.o buf.o pcaputil.o libmissing.a
 	$(CC) $(LDFLAGS) -o $@ urlsnarf.o base64.o buf.o pcaputil.o $(NIDSLIB) $(PCAPLIB) $(LNETLIB) $(LIBS) 
 
-webmitm: webmitm.o base64.o buf.o decode_http.o record.o libmissing.a
-	$(CC) $(LDFLAGS) -o $@ webmitm.o base64.o buf.o decode_http.o record.o $(LNETLIB) $(DBLIB) $(SSLLIB) $(TIRPCLIB) $(LIBS) 
+webmitm: webmitm.o $(OBJS) libmissing.a
+	$(CC) $(LDFLAGS) -o $@ webmitm.o $(OBJS) $(NIDSLIB) $(PCAPLIB) $(LNETLIB) $(DBLIB) $(SSLLIB) $(TIRPCLIB) $(LIBS)
 
 webspy: webspy.o base64.o buf.o remote.o libmissing.a
 	$(CC) $(LDFLAGS) -o $@ webspy.o base64.o buf.o remote.o $(NIDSLIB) $(PCAPLIB) $(LNETLIB) $(X11LIB) $(LIBS) 

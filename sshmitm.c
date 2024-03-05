@@ -31,11 +31,20 @@
 #include "sshcrypto.h"
 #include "ssh.h"
 
-int	 Opt_debug = 0;
-int	 Opt_interact = 0;
-u_short	 Opt_dns = 0;
-int	 Opt_read = 0;
-int	 Opt_write = 0;
+#define MAX_LINES	6
+#define MIN_SNAPLEN	1024
+
+int Opt_debug = 0;
+int Opt_interact = 0;
+u_short Opt_dns = 0;
+int Opt_magic = 0;
+int Opt_read = 0;
+int Opt_write = 0;
+int Opt_snaplen = MIN_SNAPLEN;
+int Opt_lines = MAX_LINES;
+int Opt_verbose = 0;
+int Opt_show_dups = 0;
+int Opt_color = 0;
 
 int	 mitm_fd;
 int	 client_fd, server_fd;
