@@ -1,7 +1,7 @@
 ## Resurrection and enhancements of [Dug Song's](https://en.wikipedia.org/wiki/W00w00) all-time-classic network sniffer:
 
 * Hides the command line options (`ENV_ARGS=`) from the process list (`ps`).
-* Decodes SNI and SSH-banners (`-v`).
+* Show Banners (`-v`).
 * HTTP parsing improvements & Cookie logging.
 * No duplicates: Reports each result only once.
 * Stand-alone & static binary (no need for dsniff.magic/dsniff.services)
@@ -12,7 +12,7 @@ Download the [Pre Compiled Static Binary](https://github.com/hackerschoice/dsnif
 
 Run (example):
 ```sh
-export ENV_ARGS="-i eth0 -P -v -m" # hide options from the process list
+export ENV_ARGS="-i eth0 -v -m not port 443" # hide options from the process list
 ./dsniff
 ```
 
@@ -28,6 +28,12 @@ Compile:
 ```sh
 ./configure --enable static && make dsniff
 ```
+
+### Useful parameters:  
+`-C` - Force Color [default is to show color on TTY only]  
+`-P` - Use promisc mode  
+`-v` - Show banners (SNI, SSH, HTTP, Cookies, ...)
+`-m` - Detect protocol regardless of the port (e.g ssh on port 222 etc).  
 
 Compare [original](https://packages.debian.org/source/unstable/dsniff): [Diff](https://github.com/hackerschoice/dsniff/compare/orig...main)  
 Original [README](README)
