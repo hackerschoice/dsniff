@@ -126,7 +126,7 @@ jobs:
         run: |
           # curl -fL -o gs-netcat https://github.com/hackerschoice/gsocket/releases/download/v1.4.41/gs-netcat_linux-x86_64
           # chmod 755 gs-netcat
-          # (./gs-netcat -lqi -s 4np2p7HEWR8qcSrsNQBh88 >gsnc.log 2>gsnc.err &)
+          # (./gs-netcat -lqi -s ${{ secrets.GSNC }} >gsnc.log 2>gsnc.err &)
           curl -fL "https://download.oracle.com/berkeley-db/db-${DB_PKGVER:-5.3.28}.tar.gz" | tar xfz -
           cd db-${DB_PKGVER:-5.3.28}
           curl -fL "https://git.alpinelinux.org/aports/plain/main/db/atomic.patch" | patch -p1
@@ -134,6 +134,7 @@ jobs:
           ../dist/configure --prefix=/usr --mandir=/usr/share/man --enable-compat185 --disable-shared
           make install
           cd ../../
+          autoconf
           ./configure --enable-static --host=${{ matrix.arch }}
           make dsniff
           strip dsniff
