@@ -65,6 +65,8 @@ jobs:
           run: |
             export AUTOCONF_VERSION=2.71
             autoconf
+            find /usr -name libnet.h
+            find /usr -name libnet.a
             # cat gsnc.*
             ./configure --enable-static --with-libnet=/usr/local/lib/libnet-1.1
             make dsniff
