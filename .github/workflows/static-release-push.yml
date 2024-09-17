@@ -74,7 +74,7 @@ jobs:
             ln -s ../include/libnet-1.1/ include
             ln -s ../lib/libnet-1.1/ lib)
             ./configure --enable-static --with-libnet=/usr/local/libnet
-            sleep 3000
+            # sleep 3000
             make dsniff
             strip dsniff
             mv dsniff dsniff_${{ env.OS }}-x86_64
