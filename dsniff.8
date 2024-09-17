@@ -9,7 +9,7 @@ password sniffer
 .na
 .nf
 .fi
-\fBdsniff\fR [\fB-v\fR] [\fB-c\fR] [\fB-d\fR] [\fB-m\fR] [\fB-N\fR] [\fB-P\fR] [\fB-i
+\fBdsniff\fR [\fB-v\fR] [\fB-c\fR] [\fB-a\fR] [\fB-d\fR] [\fB-m\fR] [\fB-N\fR] [\fB-P\fR] [\fB-i
 \fIinterface\fR | \fB-p \fIpcapfile\fR] [\fB-s \fIsnaplen\fR] [\fB-M \fImagics\fR] [\fB-f \fIservices\fR]
 [\fB-t \fItrigger[,...]\fR]
 [\fB-r\fR|\fB-w\fR \fIsavefile\fR] [\fIexpression\fR]
@@ -39,6 +39,8 @@ routed traffic (such as when using arpspoof(8) to intercept client
 traffic bound for the local gateway).
 .IP \fB-v\fR
 Verbose. Show banners.
+.IP \fB-a\fR
+Show all results. Otherwise dsniff tries not to show to many duplicates.
 .IP \fB-d\fR
 Enable debugging mode.
 .IP \fB-m\fR
@@ -47,6 +49,8 @@ Enable automatic protocol detection. Use twice (-m -m) to ignore protocols of kn
 Resolve IP addresses to hostnames.
 .IP \fB-P\fR
 Enable promisc mode.
+.IP \fB-C\fR
+Force color output even if not a tty.
 .IP "\fB-i \fIinterface\fR"
 Specify the interface to listen on.
 .IP "\fB-p \fIpcapfile\fR"
@@ -57,7 +61,7 @@ Analyze at most the first \fIsnaplen\fR bytes of each TCP connection,
 rather than the default of 1024.
 .IP "\fB-f \fIservices\fR"
 Load triggers from a \fIservices\fR file.
-.IP "\fB-M \fImagigfile\fR"
+.IP "\fB-M \fImagicfile\fR"
 Load \fImagics\fR from file. Default is to use internal. Can not be used with \fI-t\fR.
 .IP "\fB-t \fItrigger\fR[,...]"
 Load triggers from a comma-separated list, specified as

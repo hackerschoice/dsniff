@@ -19,6 +19,8 @@
 #include "buf.h"
 #include "decode.h"
 
+extern struct _dc_meta dc_meta;
+
 int
 decode_ftp(u_char *buf, int len, u_char *obuf, int olen)
 {
@@ -48,6 +50,7 @@ decode_ftp(u_char *buf, int len, u_char *obuf, int olen)
 		    strncasecmp(buf_ptr(line), "ACCT ", 5) == 0 ||
 		    strncasecmp(buf_ptr(line), "PASS ", 5) == 0) {
 			buf_putf(&outbuf, "%s\n", buf_ptr(line));
+			dc_meta.is_hot = 1;
 			n++;
 		}
 	}
