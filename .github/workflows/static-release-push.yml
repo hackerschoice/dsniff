@@ -18,7 +18,7 @@ jobs:
       - name: Starting the VM
         uses: vmactions/freebsd-vm@v1
         with:
-          release: 12.3
+          # release: 12.3
           usesh: true
           prepare: |
             pkg install -y curl autoconf gcc libnet libnids libpcap
@@ -52,8 +52,15 @@ jobs:
           #release: 7.1
           usesh: true
           prepare: |
-            pkg_add curl bash autoconf-2.71 gcc-11.2.0p3 gmake gtar
-            pkg_add libnet-1.1.6v0 libnids openssl-3.0.8
+            pkg_add curl
+            pkg_add autoconf-2.71
+            pkg_add openssl-3.0.8
+            pkg_info -Q tar
+            pkg_add gcc-11.2.0p3
+            pkg_add gmake
+            pkg_add tar
+            pkg_add libnet-1.1.6v0
+            pkg_add libnids
 
           run: |
             export AUTOCONF_VERSION=2.71
