@@ -49,7 +49,7 @@ jobs:
       - name: Starting the VM
         uses: vmactions/openbsd-vm@v1
         with:
-          release: 7.1
+          release: 7.2
           usesh: true
           prepare: |
             pkg_add curl
