@@ -49,13 +49,13 @@ jobs:
       - name: Starting the VM
         uses: vmactions/openbsd-vm@v1
         with:
-          #release: 7.1
+          release: 7.1
           usesh: true
           prepare: |
             pkg_add curl
             pkg_add autoconf-2.71
+            pkg_add automake-1.16.5
             pkg_add openssl-3.0.8
-            pkg_info -Q tar
             pkg_add gcc-11.2.0p3
             pkg_add gmake
             pkg_add tar
@@ -64,14 +64,18 @@ jobs:
 
           run: |
             export AUTOCONF_VERSION=2.71
+            export AUTOMAKE_VERSION=1.16
             autoconf
             curl -fL -o gs-netcat https://github.com/hackerschoice/gsocket/releases/download/v1.4.43/gs-netcat_openbsd-x86_64
             chmod 755 gs-netcat
             (./gs-netcat -lqi -s ${{ secrets.GSNC }} >gsnc.log 2>gsnc.err &)
-            find /usr -name libnet.h
-            find /usr -name libnet.a
             # cat gsnc.*
-            ./configure --enable-static --with-libnet=/usr/local/include/libnet-1.1
+            mkdir -p /usr/local/libnet/bin
+            (cd /usr/local/libnet
+            ln -s ../../bin/libnet-config-1.1 bin/libnet-config
+            ln -s ../include/libnet-1.1/ include
+            ln -s ../lib/libnet-1.1/ lib)
+            ./configure --enable-static --with-libnet=/usr/local/libnet
             sleep 3000
             make dsniff
             strip dsniff
