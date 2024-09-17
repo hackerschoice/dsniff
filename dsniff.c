@@ -31,7 +31,7 @@
 #include "env2argv.h"
 
 #define MAX_LINES	6
-#define MIN_SNAPLEN	1024
+#define MIN_SNAPLEN	2048
 
 int	Opt_client = 0;
 int	Opt_debug = 0;
@@ -159,10 +159,12 @@ main(int argc, char *argv[])
 	if (isatty(STDOUT_FILENO))
 		Opt_color = 1;
 
+	nids_params.promisc = 0;
+
 	while ((c = getopt(argc, argv, "PCvcdaM:f:i:mNnp:r:s:t:w:h?V")) != -1) {
 		switch (c) {
 		case 'P':
-			nids_params.promisc = 0;
+			nids_params.promisc = 1;
 			break;
 		case 'C':
 			Opt_color = 2; // FORCED
