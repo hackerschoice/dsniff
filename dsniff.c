@@ -272,11 +272,12 @@ main(int argc, char *argv[])
 		errx(1, "nids_init: %s", nids_errbuf);
 	}
 
-	// Only load if triggers are not used.
+	// Only load if manual triggers are not used.
 	if (triggers == NULL) {
 		if (Opt_magic)
 			trigger_init_magic(magics);
-		// if -m -m then only use MAGIC (and ignoring dsniff.services completely)
+		// if -m -m then only trigger on MAGIC (and ignoring dsniff.services completely)
+		// -m _OR_ -f <foobar>
 		if ((Opt_magic <= 1) || (services != NULL))
 			trigger_init_services(services);
 	}
