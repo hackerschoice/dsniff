@@ -48,27 +48,26 @@ int Opt_color = 0;
 static void
 usage(void)
 {
-	fprintf(stderr, "Version: " VERSION "
-Usage: dsniff [-cdamNPCv] [-i interface | -p pcapfile] [-s snaplen]
-              [-f services] [-t trigger[,...]] [-r|-w savefile]
-              [expression]
- -c         Half-duplex TCP stream assembly
- -a         Show duplicates
- -v         Verbose. Show banners
- -d         Enable debugging mode
- -m         Enable protocol detection and DPI. Use twice (-m -m) to also DPI known ports
- -C         Force color output even if not a TTY
- -N         Resolve IP addresses to hostname
- -P         Enable promisc mode
- -i <link>  Specify the interface to listen on
- -p <file>  Read from pcap file
- -s <len>   Analyze at most the first snaplen of each TCP connection [default: %d]
- -w <db>    Write sniffed sessions to db rather then printing them out
- -r <db>    Read sniffed sessions from a db created with the -w option
- 
- Example:
-   dsniff -i eth0 -C -m -m >log.txt
-", MIN_SNAPLEN);
+	fprintf(stderr, "Version: " VERSION "\n"
+"Usage: dsniff [-cdamNPCv] [-i interface | -p pcapfile] [-s snaplen]\n"
+"              [-f services] [-t trigger[,...]] [-r|-w savefile]\n"
+"              [expression]\n"
+" -c         Half-duplex TCP stream assembly\n"
+" -a         Show duplicates\n"
+" -v         Verbose. Show banners\n"
+" -d         Enable debugging mode\n"
+" -m         Enable protocol detection and DPI. Use twice (-m -m) to also DPI known ports\n"
+" -C         Force color output even if not a TTY\n"
+" -N         Resolve IP addresses to hostname\n"
+" -P         Enable promisc mode\n"
+" -i <link>  Specify the interface to listen on\n"
+" -p <file>  Read from pcap file\n"
+" -s <len>   Analyze at most the first snaplen of each TCP connection [default: %d]\n"
+" -w <db>    Write sniffed sessions to db rather then printing them out\n"
+" -r <db>    Read sniffed sessions from a db created with the -w option\n"
+"\n" 
+" Example:\n"
+"   dsniff -i eth0 -C -m -m >log.txt\n", MIN_SNAPLEN);
 	exit(1);
 }
 
