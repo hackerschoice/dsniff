@@ -93,29 +93,13 @@ decode_pop(u_char *buf, int len, u_char *obuf, int olen)
 		}
 
 		if (mode == AUTHPLAIN) {
-			j = base64_pton(p, p, strlen(p));
-			p[j] = '\0';
-			n = 0;
-			s = p;
-			/* p consists of three parts, divided by \0 */
-			while (s <= &p[j] && n<=3) {
-				if (n == 0) {
-					/* we do not process this portion yet */
-				} else if (n == 1) {
-					user = s;
-				} else if (n == 2) {
-					password = s;
-				}
-				n++;
-				while (*s) s++;
-				s++;
-			}
+			decode_authplain(p, &user, &password);
 		}
 
 		if (mode == AUTHLOGIN) {
 			j = base64_pton(p, p, strlen(p));
 			p[j] = '\0';
-			if (! user) {
+			if (!user) {
 				user = p;
 			} else {
 				password = p;

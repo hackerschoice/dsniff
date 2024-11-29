@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "base64.h"
 #include "decode.h"
 #include "buf.h"
 
@@ -23,26 +24,48 @@ extern struct _dc_meta dc_meta;
 int
 decode_imap(u_char *buf, int len, u_char *obuf, int olen)
 {
-	struct buf *line, inbuf, outbuf;
-	int i;
+	char *p;
+	char *ptr;
+	enum {
+		NONE,
+		AUTHPLAIN,
+		AUTHLOGIN,
+		USERPASS
+	} mode = NONE;
 
-	buf_init(&inbuf, buf, len);
-	buf_init(&outbuf, obuf, olen);
-	
-	while ((i = buf_index(&inbuf, "\r\n", 2)) != -1) {
-		line = buf_tok(&inbuf, NULL, i);
-		buf_skip(&inbuf, 2);
+	obuf[0] = '\0';
 
-		if ((i = buf_index(line, " ", 1)) != -1) {
-			buf_skip(line, i + 1);
-		
-			if (buf_cmp(line, "LOGIN ", 6) == 0) {
-				buf_putf(&outbuf, "%.*s\n", buf_len(line), buf_ptr(line));
-				dc_meta.is_hot = 1;
-			}
+	for (p = strtok(buf, "\r\n"); p != NULL; p = strtok(NULL, "\r\n")) {
+		if (mode == NONE) {
+			if ((ptr = strchr(p, ' ')) == NULL)
+				break;
+			p = ++ptr;
+			if (strncasecmp(p, "AUTHENTICATE PLAIN", 18) == 0) {
+				mode = AUTHPLAIN;
+				continue;
+			} else if (strncasecmp(p, "LOGIN ", 6) == 0) {
+				mode = USERPASS; // FALL-TROUGH.
+			} else 
+				continue;
+		}
+
+		if (mode == USERPASS) {
+			snprintf(obuf, olen, "%s\n", p + 6);
+			break;
+		}
+
+		if (mode == AUTHPLAIN) {
+			char *u , *pass;
+			if (decode_authplain(p, &u, &pass) != 0)
+				break;
+			snprintf(obuf, olen, "%s %s\n", u, pass);
+			break;
 		}
 	}
-	buf_end(&outbuf);
-	
-	return (buf_len(&outbuf));
+
+	if (obuf[0] == '\0')
+		return 0;
+
+	dc_meta.is_hot = 1;
+	return (strlen(obuf));
 }

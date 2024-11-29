@@ -16,6 +16,7 @@
 #include <string.h>
 #include <ctype.h>
 
+#include "base64.h"
 #include "options.h"
 #include "decode.h"
 #include "crc32.h"
@@ -317,4 +318,33 @@ color_ip(u_char *dst, size_t dsz, in_addr_t ip) {
 
 	return dst;
 }
+
+
+int
+decode_authplain(u_char *p, char **userp, char **passwordp) {
+	int i, j, n;
+	u_char *s;
+	j = base64_pton(p, p, strlen(p));
+	p[j] = '\0';
+	n = 0;
+	s = p;
+
+	/* p consists of three parts, divided by \0 */
+	while (s <= &p[j] && n<=3) {
+		if (n == 0) {
+			/* we do not process this portion yet */
+		} else if (n == 1) {
+			*userp = (char *)s;
+		} else if (n == 2) {
+			*passwordp = (char *)s;
+			return 0;
+		}
+		n++;
+		while (*s) s++;
+		s++;
+	}
+
+	return -1;
+}
+
 

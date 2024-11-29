@@ -117,4 +117,6 @@ int	decode_x11(u_char *buf, int len, u_char *obuf, int olen);
 int	decode_yppasswd(u_char *buf, int len, u_char *obuf, int olen);
 int	decode_ypserv(u_char *buf, int len, u_char *obuf, int olen);
 
+int decode_authplain(u_char *p, char **userp, char **passwordp);
+
 #endif /* DECODE_H */
