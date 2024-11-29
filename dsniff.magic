@@ -2,9 +2,7 @@
 #
 # Network protocol magic(5) for dsniff.
 #
-
 #0	string		FLAPON		aim
-
 0	string		BEGIN\ 		cvs
 
 0	string		SYST		ftp
@@ -24,6 +22,12 @@
 4	string		\ LOGIN\ 	imap
 5	string		\ LOGIN\ 	imap
 
+1	string		\ AUTHENTICATE PLAIN\ 	imap
+2	string		\ AUTHENTICATE PLAIN\ 	imap
+3	string		\ AUTHENTICATE PLAIN\ 	imap
+4	string		\ AUTHENTICATE PLAIN\ 	imap
+5	string		\ AUTHENTICATE PLAIN\ 	imap
+
 0	string		NICK\ 		irc
 
 0	string		USER\ 		pop
@@ -39,7 +43,7 @@
 0	belong		0x7f7f4943
 >4	beshort		0x4100		citrix
 
-0	belong		0x0200e803	icq
+#0	belong		0x0200e803	icq
 
 0	beshort		0x1603
 >2	byte		0x01

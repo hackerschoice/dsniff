@@ -20,6 +20,12 @@ static char *mgx[] = {\
 "4	string		\\ LOGIN\\ 	imap", \
 "5	string		\\ LOGIN\\ 	imap", \
 "", \
+"1	string		\\ AUTHENTICATE PLAIN\\ 	imap", \
+"2	string		\\ AUTHENTICATE PLAIN\\ 	imap", \
+"3	string		\\ AUTHENTICATE PLAIN\\ 	imap", \
+"4	string		\\ AUTHENTICATE PLAIN\\ 	imap", \
+"5	string		\\ AUTHENTICATE PLAIN\\ 	imap", \
+"", \
 "0	string		NICK\\ 		irc", \
 "", \
 "0	string		USER\\ 		pop", \
@@ -35,7 +41,6 @@ static char *mgx[] = {\
 "0	belong		0x7f7f4943", \
 ">4	beshort		0x4100		citrix", \
 "", \
-"0	belong		0x0200e803	icq", \
 "", \
 "0	beshort		0x1603", \
 ">2	byte		0x01", \
