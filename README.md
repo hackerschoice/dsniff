@@ -36,7 +36,7 @@ Compile:
 ### Useful parameters:  
 `-C` - Force Color [default is to show color on TTY only]  
 `-P` - Use promisc mode  
-`-v` - Show banners (SNI, SSH, HTTP, Cookies, ...)
+`-v` - Show banners (SNI, SSH, HTTP, Cookies, ...)  
 `-m` - Detect protocol regardless of the port (e.g ssh on port 222 etc).  
 
 Compare [original](https://packages.debian.org/source/unstable/dsniff): [Diff](https://github.com/hackerschoice/dsniff/compare/orig...main)  
