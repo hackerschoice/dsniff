@@ -219,7 +219,7 @@ trigger_set_magic(int proto, int num, u_char *buf, int len)
 	char *name;
 
 	if ((name = magic_match(buf, len)) == NULL)
-		return (NULL);
+		return NULL;
 
 	t = NULL;
 	tr.num = num;

@@ -3,7 +3,7 @@
 #ifndef __DS_CRC32_H__
 #define __DS_CRC32_H__ 1
 
-#define CRC32_INITIAL         (0xffffffffUL)
+#define CRC32_INITIAL         ((uint32_t)0xffffffff)
 #define CRC32_INITIAL_STATE   (~CRC32_INITIAL)
 
 #include <stdint.h>

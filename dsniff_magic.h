@@ -14,6 +14,12 @@ static char *mgx[] = {\
 "0	string		POST\\ /		http", \
 "0	string		CONNECT\\ 	http", \
 "", \
+"1	string		\\ ID\\ 	imap", \
+"2	string		\\ ID\\ 	imap", \
+"3	string		\\ ID\\ 	imap", \
+"4	string		\\ ID\\ 	imap", \
+"5	string		\\ ID\\ 	imap", \
+"", \
 "1	string		\\ LOGIN\\ 	imap", \
 "2	string		\\ LOGIN\\ 	imap", \
 "3	string		\\ LOGIN\\ 	imap", \

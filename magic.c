@@ -556,7 +556,6 @@ mconvert(union VALUETYPE *p, struct magic *m)
 	case STRING:
 	{
 		char *ptr;
-		
 		/* Null terminate and eat the return */
 		p->s[sizeof(p->s) - 1] = '\0';
 		if ((ptr = strchr(p->s, '\n')) != NULL)

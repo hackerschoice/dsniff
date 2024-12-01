@@ -247,7 +247,7 @@ record(in_addr_t src, in_addr_t dst, int proto, u_short sport, u_short dport,
 	if (!Opt_show_dups) {
 		// Check for duplicates.
 		crc = dc_meta.crc;
-		// Add entire buffer unless decodeing function already added 'uniq' items.
+		// Add entire buffer unless decoding function already added 'uniq' items.
 		if (crc == CRC32_INITIAL_STATE)
 			crc = crc32_update(buf, len, crc);
 		crc = crc32_update(&src, sizeof src, crc);
