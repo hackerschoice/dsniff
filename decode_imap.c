@@ -49,7 +49,7 @@ decode_imap(u_char *buf, int len, u_char *obuf, int olen)
 				mode = AUTHPLAIN;
 				need_more = 1;
 				continue;
-			else if ((strncasecmp(p, "AUTHENTICATE ", 13) == 0) || (strncasecmp(p, "LOGIN {", 6) == 0)) {
+			} else if ((strncasecmp(p, "AUTHENTICATE ", 13) == 0) || (strncasecmp(p, "LOGIN {", 6) == 0)) {
 				strlcat(obuf, p, olen);
 				mode = AUTHMULTI;
 				need_more = 2;
