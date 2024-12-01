@@ -26,31 +26,42 @@ decode_imap(u_char *buf, int len, u_char *obuf, int olen)
 {
 	char *p;
 	char *ptr;
+	int need_more = 0;
 	enum {
 		NONE,
 		AUTHPLAIN,
-		AUTHLOGIN,
+		AUTHMULTI,
 		USERPASS
 	} mode = NONE;
 
 	obuf[0] = '\0';
 
 	for (p = strtok(buf, "\r\n"); p != NULL; p = strtok(NULL, "\r\n")) {
-		if (mode == NONE) {
+		if (need_more == 0) {
+			// skip ID
 			if ((ptr = strchr(p, ' ')) == NULL)
 				break;
 			p = ++ptr;
+		}
+
+		if (mode == NONE) {
 			if (strncasecmp(p, "AUTHENTICATE PLAIN", 18) == 0) {
 				mode = AUTHPLAIN;
+				need_more = 1;
+				continue;
+			else if ((strncasecmp(p, "AUTHENTICATE ", 13) == 0) || (strncasecmp(p, "LOGIN {", 6) == 0)) {
+				strlcat(obuf, p, olen);
+				mode = AUTHMULTI;
+				need_more = 2;
 				continue;
 			} else if (strncasecmp(p, "LOGIN ", 6) == 0) {
-				mode = USERPASS; // FALL-TROUGH.
+				mode = USERPASS; // FALL-THROUGH.
 			} else 
 				continue;
 		}
 
 		if (mode == USERPASS) {
-			snprintf(obuf, olen, "%s\n", p + 6);
+			snprintf(obuf, olen, "%s\n", p + 6 /* 'LOGIN '*/);
 			break;
 		}
 
@@ -61,6 +72,16 @@ decode_imap(u_char *buf, int len, u_char *obuf, int olen)
 			snprintf(obuf, olen, "%s %s\n", u, pass);
 			break;
 		}
+
+		if (need_more > 0) {
+			need_more--;
+			strlcat(obuf, p, olen);
+			if (need_more > 0)
+				continue;
+			strlcat(obuf, "\n", olen);
+			break;
+		}
+		break;
 	}
 
 	if (obuf[0] == '\0')
