@@ -25,34 +25,55 @@ extern struct _dc_meta dc_meta;
 int
 decode_smtp(u_char *buf, int len, u_char *obuf, int olen)
 {
-	char *p;
+	char *p, *s;
 	int i, j, login = 0;
+	int found = 0;
 	
 	obuf[0] = '\0';
-	
 	for (p = strtok(buf, "\r\n"); p != NULL; p = strtok(NULL, "\r\n")) {
-		if (login == 1) {
-			strlcat(obuf, p, olen);
-			i = base64_pton(p, p, strlen(p));
-			p[i] = '\0';
-			j = strlen(obuf);
-			snprintf(obuf + j, olen - j, " [%s]\n", p);
-			login = 0;
+		if ((strncmp(p, "MAIL ", 5) == 0) || (strncmp(p, "RCPT ", 5) == 0)) {
+			if (!Opt_verbose)
+				break;
+			if (obuf[0] != '\0')
+				strlcat(obuf, "\n", olen);
+			strlcat(obuf, p+5, olen);
+			if (++found >= 2)
+				break;
+			continue;
 		}
-		else if (strncmp(p, "AUTH LOGIN ", 11) == 0) {
-			strlcat(obuf, p, olen);
-			p += 11;
-			i = base64_pton(p, p, strlen(p));
-			p[i] = '\0';
-			j = strlen(obuf);
-			snprintf(obuf + j, olen - j, " [%s]\n", p);
-			login = 1;
-			dc_meta.is_hot = 1;
-		}
-		else if (strncmp(p, "MAIL ", 5) == 0 ||
-			 strncmp(p, "RCPT ", 5) == 0 ||
-			 strncmp(p, "DATA", 4) == 0) {
+		if ((strncmp(p, "DATA", 4) == 0) || (strncmp(p, "QUIT", 4) == 0))
 			break;
+
+		if (login == 0) {
+			if (strncmp(p, "AUTH LOGIN", 10) != 0)
+				continue;
+		
+			strlcat(obuf, p, olen);
+			p += 10;
+			i = base64_pton(p, p, strlen(p));
+			if (i > 0) {
+				p[i] = '\0';
+				j = strlen(obuf);
+				snprintf(obuf + j, olen - j, " [%s]", p);
+			} else {
+				strlcat(obuf, " ", olen);
+				login = 1;
+			}
+			dc_meta.is_hot = 1;
+			continue;
+		}
+
+		strlcat(obuf, p, olen);
+		// USER: <base64>
+		// PASS: <base64>
+		// <base64>
+		if ((s = strchr(p, ' ')) != NULL)
+			p = ++s;
+		i = base64_pton(p, p, strlen(p));
+		if (i > 0) {
+			p[i] = '\0';
+			j = strlen(obuf);
+			snprintf(obuf + j, olen - j, " [%s] ", p);
 		}
 	}
 	return (strlen(obuf));

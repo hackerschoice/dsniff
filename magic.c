@@ -45,6 +45,7 @@
 #include "pathnames.h"
 #include "magic.h"
 #include "dsniff_magic.h"
+#include "decode.h"
 
 #define LOWCASE(p)	(isupper((u_char) (p)) ? tolower((u_char) (p)) : (p))
 
@@ -493,6 +494,8 @@ magic_parse(char *p)
 	while (isascii((u_char) *p) && isspace((u_char) *p)) p++;
 	
 	strlcpy(m->desc, p, sizeof(m->desc));
+	if ((*m->desc != '\0') && (getdecodebyname(m->desc) == NULL))
+		warnx("magic: unknown decode: '%s'", p);
 	
 	if (Opt_debug) {
 		mdump(m);

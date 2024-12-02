@@ -36,7 +36,7 @@
 int	Opt_client = 0;
 int	Opt_debug = 0;
 u_short	Opt_dns = 0;
-int	Opt_magic = 0;
+int	Opt_magic = 1;
 int	Opt_read = 0;
 int	Opt_write = 0;
 int	Opt_snaplen = MIN_SNAPLEN;
@@ -49,17 +49,21 @@ static void
 usage(void)
 {
 	fprintf(stderr, "Version: " VERSION "\n"
-"Usage: dsniff [-cdamNPCv] [-i interface | -p pcapfile] [-s snaplen]\n"
+"Usage: dsniff [-cdamDNPCv] [-i interface | -p pcapfile] [-s snaplen]\n"
 "              [-f services] [-t trigger[,...]] [-r|-w savefile]\n"
-"              [expression]\n"
+"              [pcap filter]\n"
 " -c         Half-duplex TCP stream assembly\n"
 " -a         Show duplicates\n"
 " -v         Verbose. Show banners\n"
 " -d         Enable debugging mode\n"
-" -m         Enable protocol detection and DPI. Use twice (-m -m) to also DPI known ports\n"
+" -D         Disable DPI. Only decode known ports.\n"
+" -m         Force DPI also on known ports (e.g. ignore /etc/services).\n"
+"            For example, -m will detect SSH on port 443 (https).\n"
 " -C         Force color output even if not a TTY\n"
 " -N         Resolve IP addresses to hostname\n"
 " -P         Enable promisc mode\n"
+" -t <...>   Force a decoding method for a specific port/protocol.\n"
+"            Example: Decode IMAP on port 8143: -t 8143/tcp=imap\n"
 " -i <link>  Specify the interface to listen on\n"
 " -p <file>  Read from pcap file\n"
 " -s <len>   Analyze at most the first snaplen of each TCP connection [default: %d]\n"
@@ -67,7 +71,7 @@ usage(void)
 " -r <db>    Read sniffed sessions from a db created with the -w option\n"
 "\n" 
 " Example:\n"
-"   dsniff -i eth0 -C -m -m >log.txt\n", MIN_SNAPLEN);
+"   dsniff -i eth0 -C >log.txt\n", MIN_SNAPLEN);
 	exit(1);
 }
 
@@ -177,7 +181,7 @@ main(int argc, char *argv[])
 
 	nids_params.promisc = 0;
 
-	while ((c = getopt(argc, argv, "PCvcdaM:f:i:mNnp:r:s:t:w:h?V")) != -1) {
+	while ((c = getopt(argc, argv, "PCvcdDaM:f:i:mNnp:r:s:t:w:h?V")) != -1) {
 		switch (c) {
 		case 'P':
 			nids_params.promisc = 1;
@@ -205,6 +209,9 @@ main(int argc, char *argv[])
 			break;
 		case 'i':
 			nids_params.device = optarg;
+			break;
+		case 'D':
+			Opt_magic = 0;
 			break;
 		case 'm':
 			Opt_magic++;
@@ -272,16 +279,18 @@ main(int argc, char *argv[])
 		errx(1, "nids_init: %s", nids_errbuf);
 	}
 
-	// Only load if manual triggers are not used.
-	if (triggers == NULL) {
-		if (Opt_magic)
-			trigger_init_magic(magics);
-		// if -m -m then only trigger on MAGIC (and ignoring dsniff.services completely)
-		// -m _OR_ -f <foobar>
-		if ((Opt_magic <= 1) || (services != NULL))
-			trigger_init_services(services);
-	}
-	
+	// HERE: Manual -t triggers have already been loaded.
+	// Add DPI magics
+	if (Opt_magic >= 1)
+		trigger_init_magic(magics);
+	if (Opt_magic >= 2)
+		fprintf(stderr, "\
+WARNING: DPI (-m) wont detect some protocols. Use -t to assist the DPI.\n\
+Example: To decode IMAP on port 8143 use '-t 8143/tcp=imap'.");
+	// Add known ports to triggers unless DPI is forced on all ports (-m)
+	if (Opt_magic != 2)
+		trigger_init_services(services);
+
 	nids_register_ip(trigger_ip);
 	nids_register_ip(trigger_udp);
 		

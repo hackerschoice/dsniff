@@ -125,17 +125,17 @@ tcp_raw_input(struct libnet_ipv4_hdr *ip, struct libnet_tcp_hdr *tcp, int len)
 	struct tcp_conn *conn;
 	struct tcp_seg seg;
 	struct iovec *iov;
-	u_short cksum;
+	// u_short cksum;
 	u_char *buf;
 	int tcp_hl = tcp->th_off * 4;
 
 	/* Verify TCP checksum. */
-	cksum = tcp->th_sum;
-	libnet_do_checksum(NULL, (u_char *) ip, IPPROTO_TCP, len);
+	// FIXME-2024 chksum is always bad due to checksum offloading.
+	// cksum = tcp->th_sum;
+	// libnet_do_checksum(NULL, (u_char *) ip, IPPROTO_TCP, len);
 
-	if (cksum != tcp->th_sum)
-		return (NULL);
-
+	// if (cksum != tcp->th_sum)
+	// 	return (NULL);
 	tha.src = ip->ip_src.s_addr;
 	tha.dst = ip->ip_dst.s_addr;
 	tha.port = ntohs(tcp->th_sport) << 16 | ntohs(tcp->th_dport);

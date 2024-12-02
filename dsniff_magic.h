@@ -26,16 +26,16 @@ static char *mgx[] = {\
 "4	string		\\ LOGIN\\ 	imap", \
 "5	string		\\ LOGIN\\ 	imap", \
 "", \
-"1	string		\\ AUTHENTICATE PLAIN\\ 	imap", \
-"2	string		\\ AUTHENTICATE PLAIN\\ 	imap", \
-"3	string		\\ AUTHENTICATE PLAIN\\ 	imap", \
-"4	string		\\ AUTHENTICATE PLAIN\\ 	imap", \
-"5	string		\\ AUTHENTICATE PLAIN\\ 	imap", \
+"1	string		\\ AUTHENTICATE\\ PLAIN\\ 	imap", \
+"2	string		\\ AUTHENTICATE\\ PLAIN\\ 	imap", \
+"3	string		\\ AUTHENTICATE\\ PLAIN\\ 	imap", \
+"4	string		\\ AUTHENTICATE\\ PLAIN\\ 	imap", \
+"5	string		\\ AUTHENTICATE\\ PLAIN\\ 	imap", \
 "", \
 "0	string		NICK\\ 		irc", \
 "", \
-"0	string		USER\\ 		pop", \
-"0	string		AUTH\\ 		pop", \
+"0	string		USER\\ 		pop3", \
+"0	string		AUTH\\ 		pop3", \
 "", \
 "12	string		MIT-MAGIC	x11", \
 "", \

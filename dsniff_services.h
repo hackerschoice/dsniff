@@ -56,7 +56,7 @@ static struct _ds_service dsx[] = {
 {"mmxp",        2417,    DSNIFF_SERVICE_udp},
 {"tds",         2638,    DSNIFF_SERVICE_tcp},
 {"http",        3128,    DSNIFF_SERVICE_tcp},
-{"icq",         4000,    DSNIFF_SERVICE_udp},
+//{"icq",         4000,    DSNIFF_SERVICE_udp},
 //{"napster",     4444,    DSNIFF_SERVICE_tcp},
 // {"aim",         5190,    DSNIFF_SERVICE_tcp},
 {"postgresql",  5432,    DSNIFF_SERVICE_tcp},

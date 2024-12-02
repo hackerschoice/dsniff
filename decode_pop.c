@@ -83,7 +83,6 @@ decode_pop(u_char *buf, int len, u_char *obuf, int olen)
 				 */
 			}
 		}
-		printf("(%d) %s\n", mode, p);
 		if (mode == USERPASS) {
 			if (strncasecmp(p, "USER ", 5) == 0) {
 				user = &p[5];
@@ -108,7 +107,7 @@ decode_pop(u_char *buf, int len, u_char *obuf, int olen)
 		}
 
 		if (user && password) {
-			strlcat(obuf, "\nusername [", olen);
+			strlcat(obuf, "username [", olen);
 			strlcat(obuf, user, olen);
 			strlcat(obuf, "] password [", olen);
 			strlcat(obuf, password, olen);

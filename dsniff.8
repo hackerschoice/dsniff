@@ -9,7 +9,7 @@ password sniffer
 .na
 .nf
 .fi
-\fBdsniff\fR [\fB-v\fR] [\fB-c\fR] [\fB-a\fR] [\fB-d\fR] [\fB-m\fR] [\fB-N\fR] [\fB-P\fR] [\fB-i
+\fBdsniff\fR [\fB-v\fR] [\fB-c\fR] [\fB-a\fR] [\fB-d\fR] [\fB-m\fR] [\fB-D\fR] [\fB-N\fR] [\fB-P\fR] [\fB-i
 \fIinterface\fR | \fB-p \fIpcapfile\fR] [\fB-s \fIsnaplen\fR] [\fB-M \fImagics\fR] [\fB-f \fIservices\fR]
 [\fB-t \fItrigger[,...]\fR]
 [\fB-r\fR|\fB-w\fR \fIsavefile\fR] [\fIexpression\fR]
@@ -44,13 +44,15 @@ Show all results. Otherwise dsniff tries not to show to many duplicates.
 .IP \fB-d\fR
 Enable debugging mode.
 .IP \fB-m\fR
-Enable automatic protocol detection. Use twice (-m -m) to ignore protocols of known ports (e.g to detect SSH on port 443).
+Force protocol detection/DPI also on known services. For example, -m will detect SSH _and_ HTTPS on port 443.
 .IP \fB-N\fR
 Resolve IP addresses to hostnames.
 .IP \fB-P\fR
 Enable promisc mode.
 .IP \fB-C\fR
 Force color output even if not a tty.
+.IP \fB-D\fR
+Disable DPI. Only decode known services (DPI is enabled by default on unknown ports).
 .IP "\fB-i \fIinterface\fR"
 Specify the interface to listen on.
 .IP "\fB-p \fIpcapfile\fR"

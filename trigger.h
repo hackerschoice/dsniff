@@ -11,7 +11,7 @@
 #ifndef TRIGGER_H
 #define TRIGGER_H
 
-#define TRIGGER_TCP_RAW_TIMEOUT		30
+#define TRIGGER_TCP_RAW_TIMEOUT		10
 
 void	trigger_init_list(char *list);
 void	trigger_init_magic(char *filename);
