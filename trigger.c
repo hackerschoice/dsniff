@@ -353,7 +353,7 @@ trigger_udp(struct libnet_ipv4_hdr *ip)
 	if (Opt_debug)
 		warnx("trigger_udp: decoding port %d as %s",
 		      tr.num, t->decode->dc_name);
-	
+
 	if ((len = dc_call(t->decode, buf, len, obuf, sizeof(obuf))) > 0) {
 		record(ip->ip_src.s_addr, ip->ip_dst.s_addr, IPPROTO_UDP,
 		       ntohs(udp->uh_sport), ntohs(udp->uh_dport),

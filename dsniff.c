@@ -31,7 +31,7 @@
 #include "env2argv.h"
 
 #define MAX_LINES	6
-#define MIN_SNAPLEN	1024
+#define MIN_SNAPLEN	2048
 
 int	Opt_client = 0;
 int	Opt_debug = 0;
@@ -54,8 +54,8 @@ usage(void)
 "              [pcap filter]\n"
 " -c         Half-duplex TCP stream assembly\n"
 " -a         Show duplicates\n"
-" -v         Verbose. Show banners\n"
-" -d         Enable debugging mode\n"
+" -v         Verbose. Show banners. [-vv more verbose]\n"
+" -d         Show debugging information\n"
 " -D         Disable DPI. Only decode known ports.\n"
 " -m         Force DPI also on known ports (e.g. ignore /etc/services).\n"
 "            For example, -m will detect SSH on port 443 (https).\n"

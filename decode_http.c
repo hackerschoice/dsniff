@@ -26,32 +26,31 @@
 #include "decode.h"
 #include "crc32.h"
 
-#define USER_REGEX	".*account.*|.*acct.*|.*domain.*|.*login.*|" \
-			".*member.*|.*user.*|.*name|.*email|.*_id|" \
+#define USER_REGEX	"account|acct|domain|login|" \
+			"member|user|name|email|_id|" \
 			"id|uid|mn|mailaddress"
 			
-#define PASS_REGEX	".*pass.*|.*pw|pw.*|additional_info"
+#define PASS_REGEX	"pass|pw|additional_info"
+
+#define HOTS_REGEX	"bearer|pass|token|auth"
 
 #define REGEX_FLAGS	(REG_EXTENDED | REG_ICASE | REG_NOSUB)
 
-static regex_t		*user_regex, *pass_regex;
+static regex_t		*user_regex, *pass_regex, *hots_regex;
 
 extern struct _dc_meta dc_meta;
 
 static int
-grep_pquery_auth(char *buf) {
-
+grep_pquery_hots(char *buf) {
 	if (buf == NULL)
 		return 0;
-	if (regexec(pass_regex, buf, 0, NULL, 0) == 0)
-		return 1;
-
-	if (regexec(user_regex, buf, 0, NULL, 0) == 0)
-		return 1;
+	if (regexec(hots_regex, buf, 0, NULL, 0) == 0)
+		return 1; // HOT
 
 	return 0;
 }
 
+// Return if form-data contains a user _AND_ a password
 static int
 grep_gquery_auth(char *buf)
 {
@@ -111,13 +110,53 @@ http_req_dirname(char *req)
 		strcat(req, vers);
 	}
 	return (req);
-}  
+}
+
+static void
+decode_http_form(struct buf *o, char *p) {
+	// Display decoded variables
+	if (!p)
+		return;
+	char *n;
+	while ((n = strchr(p, '&'))) {
+		*n = '\0';
+		buf_putf(o, "\n%s", p);
+		p = n + 1;
+	}
+	buf_putf(o, "\n%s", p); // remainder
+}
+
+static void
+buf_hot_header(struct buf *o, char *p) {
+	char *col;
+	if (!p)
+		return;
+	dc_update(&dc_meta, p, strlen(p));
+
+	if (Opt_color) {
+		col = strchr(p, ':');
+		*col = '\0';
+		buf_putf(o, "\n"CDY"%s:"CDR"%s"CN, p, col + 1);
+	} else
+		buf_putf(o, "\n%s", p);
+}
+
+static void
+buf_hot(struct buf *o, char *p, int is_hot) {
+	if (!p)
+		return;
+
+	if (is_hot && Opt_color) {
+		buf_putf(o, "\n"CDR"%s"CN, p);
+	} else
+		buf_putf(o, "\n%s", p);
+}
 
 int
 decode_http(u_char *buf, int len, u_char *obuf, int olen)
 {
 	struct buf *msg, inbuf, outbuf;
-	char *p, *req, *auth, *pauth, *gquery, *pquery, *host, *cookie, *agent, *location = NULL, *http_resp = NULL;
+	char *p, *req, *key, *bearer, *auth, *pauth, *gquery, *pquery, *host, *cookie, *agent, *location = NULL, *http_resp = NULL;
 	int i;
 	int is_http_ok = 1; // default assume OK
 	char dom[1024];
@@ -127,13 +166,16 @@ decode_http(u_char *buf, int len, u_char *obuf, int olen)
 	buf_init(&inbuf, buf, len);
 	buf_init(&outbuf, obuf, olen);
 
-	if (user_regex == NULL || pass_regex == NULL) {
+	if (user_regex == NULL || pass_regex == NULL || hots_regex == NULL) {
 		if ((user_regex = malloc(sizeof(*user_regex))) == NULL ||
-		    (pass_regex = malloc(sizeof(*pass_regex))) == NULL)
+		    (pass_regex = malloc(sizeof(*pass_regex))) == NULL ||
+		    (hots_regex = malloc(sizeof(*hots_regex))) == NULL)
+
 			err(1, "malloc");
 		
 		if (regcomp(user_regex, USER_REGEX, REGEX_FLAGS) ||
-		    regcomp(pass_regex, PASS_REGEX, REGEX_FLAGS))
+		    regcomp(pass_regex, PASS_REGEX, REGEX_FLAGS) ||
+		    regcomp(hots_regex, HOTS_REGEX, REGEX_FLAGS))
 			errx(1, "regcomp failed");
 	}
 
@@ -161,7 +203,8 @@ decode_http(u_char *buf, int len, u_char *obuf, int olen)
 		int is_form = 0;
 		int cont_len = 0;
 		int is_hot = 0;
-		int is_query_hot = 0;
+		int is_gquery_hot = 0;
+		int is_pquery_hot = 0;
 
 		msg = buf_tok(&inbuf, NULL, i);
 		msg->base[msg->end] = '\0';
@@ -179,17 +222,33 @@ decode_http(u_char *buf, int len, u_char *obuf, int olen)
 		} else
 			continue;
 
-		auth = pauth = gquery = pquery = host = cookie = agent = NULL;
+		key = bearer = auth = pauth = gquery = pquery = host = cookie = agent = NULL;
 
-		if ((gquery = strchr(uri_prot, '?')) != NULL) {
+		if ((gquery = strchr(uri_prot, '?')) != NULL)
 			gquery++;
-		}
 
+		char *colon;
 		while ((p = strtok(NULL, "\r\n")) != NULL) {
+			colon = strchr(p, ':');
+			if (!colon)
+				continue;
+			
+			// Check for X-API-Key: etc
+			*colon = '\0';
+			if (strcasestr(p, "key")) {
+				key = p;
+				is_hot = 1;
+			}
+			*colon = ':';
+
 			if (strncasecmp(p, "Authorization: Basic ", 21) == 0) {
 				auth = p;
 				is_hot = 1;
-			}				
+			}
+			else if (strncasecmp(p, "Authorization: Bearer ", 22) == 0) {
+				bearer = p;
+				is_hot = 1;
+			}
 			else if (strncasecmp(p, "Proxy-authorization: Basic ", 27) == 0) {
 				pauth = p;
 				is_hot = 1;
@@ -199,7 +258,7 @@ decode_http(u_char *buf, int len, u_char *obuf, int olen)
 			}
 			else if (strncasecmp(p, "Cookie: ", 8) == 0) {
 				cookie = p + 8;
-				// Cookies are alwasy "hot"
+				// Cookies are always "hot"
 				is_hot = 1;
 			}
 			else if (strncasecmp(p, "User-Agent: ", 12) == 0) {
@@ -232,114 +291,121 @@ decode_http(u_char *buf, int len, u_char *obuf, int olen)
 
 		// Check if queries contain keywords ['password' etc]
 		if (grep_gquery_auth(gquery))
-			is_query_hot++;
-		if (grep_pquery_auth(pquery))
-			is_query_hot++;
-		is_hot += is_query_hot;
+			is_gquery_hot++;
+		if (grep_pquery_hots(pquery))
+			is_pquery_hot++;
+		is_hot += (is_gquery_hot + is_pquery_hot);
 
-		if (Opt_verbose || is_hot || location) {
-			if (buf_tell(&outbuf) > 0)
-				buf_putf(&outbuf, "\n\n");
-			
-			if (type[0] == 'G' && auth) {
-				req = http_req_dirname(req);
-			}
+		if (!(Opt_verbose || is_hot || location))
+			continue; // Nothing to log. Next header.
 
-			if (Opt_color) {
-				if (gquery) {
-					*(gquery - 1) = '\0';
-					buf_putf(&outbuf, CB"%s"CDC" %s"CN"?%s", type, uri_prot, gquery);
-					*(gquery -1) = '?';
-				} else {
-					if (p = strchr(uri_prot, ' ')) {
-						*p = '\0';
-						buf_putf(&outbuf, CB"%s"CDC" %s"CN" %s", type, uri_prot, p+1);
-						*p = ' ';
-					} else
-						buf_putf(&outbuf, CB"%s"CDC" %s"CN, type, uri_prot);
-				}
-			} else
-				buf_putf(&outbuf, "%s", req);
+		if (buf_tell(&outbuf) > 0)
+			buf_putf(&outbuf, "\n\n");
+		
+		if (type[0] == 'G' && auth) {
+			req = http_req_dirname(req);
+		}
 
-			if (http_resp)
-				buf_putf(&outbuf, " >>> %s", http_resp);
-			if (is_hot) 
-				dc_meta.is_hot = 1;
-			
-			// DUP check up to '?'
-			// Anti-Fuzzing: Ignore requests to same host with different 'req' but log if Cookie/Auth is supplied
-			// On "-vv" add URI to CRC (and thus log different URIs)
-			if ((!Opt_show_dups) && (is_http_ok) && ((is_hot) || (Opt_verbose >= 2)) ) {
-				// HERE: Do NOT show duplicates.
-				if (gquery)
-					dc_update(&dc_meta, req, gquery - 1 - req); // Only dup-check up to "?"
-				else
-					dc_update(&dc_meta, req, strlen(req));
+		if (Opt_color) {
+			if (gquery) {
+				*(gquery - 1) = '\0';
+				buf_putf(&outbuf, CB"%s"CDC" %s"CN"?%s", type, uri_prot, gquery);
+				*(gquery -1) = '?';
+			} else {
+				if (p = strchr(uri_prot, ' ')) {
+					*p = '\0';
+					buf_putf(&outbuf, CB"%s"CDC" %s"CN" %s", type, uri_prot, p+1);
+					*p = ' ';
+				} else
+					buf_putf(&outbuf, CB"%s"CDC" %s"CN, type, uri_prot);
 			}
-			
-			if (host) {
-				if (Opt_color)
-					buf_putf(&outbuf, "\n"CDY"Host"CN": %s", color_domain(dom, sizeof dom, host));
-				else
-					buf_putf(&outbuf, "\nHost: %s", host);
+		} else
+			buf_putf(&outbuf, "%s", req);
 
-				dc_update(&dc_meta, host, strlen(host));
-			}
+		if (http_resp)
+			buf_putf(&outbuf, " >>> %s", http_resp);
+		if (is_hot) 
+			dc_meta.is_hot = 1;
+		
+		int is_add_uri_dc = 0;
+		if (!(cookie && (!(is_pquery_hot || is_gquery_hot)))) {
+			// If we have a COOKIE but nothing else that's "hot" in this request
+			// then do not add the URL to the DUP-check. Only add the cookie to prevent
+			// the same cookie showing again and again.
+			is_add_uri_dc = 1; // we got something else that's hot (and also a cookie)
+		} 
+		// DUP check up to '?'
+		// Anti-Sub-domain-Fuzzing: Ignore requests to same host with different 'req'
+		// On "-vv" add URI to DUP-check (and thus log different URIs)
+		if ((is_http_ok) && is_add_uri_dc && (is_hot || (Opt_verbose >= 2)) ) {
+			// HERE: Do NOT show duplicates.
+			if (gquery)
+				dc_update(&dc_meta, req, gquery - 1 - req); // Only dup-check up to "?"
+			else
+				dc_update(&dc_meta, req, strlen(req));
+		}
+		
+		if (host) {
+			if (Opt_color)
+				buf_putf(&outbuf, "\n"CDY"Host"CN": %s", color_domain(dom, sizeof dom, host));
+			else
+				buf_putf(&outbuf, "\nHost: %s", host);
 
-			if (location) {
-				if (Opt_color)
-					buf_putf(&outbuf, "\n"CDY"Location"CN": "CDR"%s"CN, location);
-				else
-					buf_putf(&outbuf, "\nLocation: %s", location);
-				location = NULL;
-			}
+			dc_update(&dc_meta, host, strlen(host));
+		}
 
-			if (agent)
-				buf_putf(&outbuf, "\n%s", agent);
-			if (cookie) {
-				if (Opt_color)
-					buf_putf(&outbuf, "\n"CDR"Cookie"CN": %s", cookie);
-				else
-					buf_putf(&outbuf, "\nCookie: %s", cookie);
-				// Dont catch 'expires=<>' timer (limit to 64). FIXME: Should really disect the cookie and match for 'expires='
-				// Prevent Fuzzing from flooding our log => Use max of 19 dubdb-slots
-				if (!Opt_show_dups) {
-					uint8_t fuzz = crc32(cookie, MIN(64, strlen(cookie))) % 19;
-					dc_update(&dc_meta, &fuzz, 1);
-				}
+		if (location) {
+			if (Opt_color)
+				buf_putf(&outbuf, "\n"CDY"Location"CN": "CDR"%s"CN, location);
+			else
+				buf_putf(&outbuf, "\nLocation: %s", location);
+			location = NULL;
+		}
+		if (agent)
+			buf_putf(&outbuf, "\n%s", agent);
+		buf_hot_header(&outbuf, key);
+		buf_hot_header(&outbuf, bearer);
+
+		if (cookie) {
+			if (Opt_color)
+				buf_putf(&outbuf, "\n"CDR"Cookie"CN": %s", cookie);
+			else
+				buf_putf(&outbuf, "\nCookie: %s", cookie);
+			// Dont catch 'expires=<>' timer (limit to 64). FIXME: Should really disect the cookie and match for 'expires='
+			// Prevent Fuzzing from flooding our log => Use max of 19 dubdb-slots
+			if (!Opt_show_dups) {
+				uint8_t fuzz = crc32(cookie, MIN(64, strlen(cookie))) % 19;
+				dc_update(&dc_meta, &fuzz, 1);
 			}
-			if (pauth) {
-				buf_putf(&outbuf, "\n%s", pauth);
-				dc_update(&dc_meta, pauth + 27, strlen(pauth + 27));
-				p = pauth + 27;
-				i = base64_pton(p, p, strlen(p));
-				p[i] = '\0';
-				buf_putf(&outbuf, " [%s]", p);
+		}
+		if (pauth) {
+			buf_putf(&outbuf, "\n%s", pauth);
+			dc_update(&dc_meta, pauth + 27, strlen(pauth + 27));
+			p = pauth + 27;
+			i = base64_pton(p, p, strlen(p));
+			p[i] = '\0';
+			buf_putf(&outbuf, " [%s]", p);
+		}
+		if (auth) {
+			buf_putf(&outbuf, "\n%s", auth);
+			dc_update(&dc_meta, auth + 21, strlen(auth + 21));
+			p = auth + 21;
+			i = base64_pton(p, p, strlen(p));
+			p[i] = '\0';
+			buf_putf(&outbuf, " [%s]", p);
+		}
+
+		if (is_gquery_hot || Opt_verbose) {
+			if (is_form) {
+				// GET _or_ POST request.
+				// HERE: Must be FORM-DATA. Do not decode other variables after "?" unless
+				// it's FORM-data.
+				decode_http_form(&outbuf, gquery);
 			}
-			if (auth) {
-				buf_putf(&outbuf, "\n%s", auth);
-				dc_update(&dc_meta, auth + 21, strlen(auth + 21));
-				p = auth + 21;
-				i = base64_pton(p, p, strlen(p));
-				p[i] = '\0';
-				buf_putf(&outbuf, " [%s]", p);
-			}
-			if (type[0] == 'P' && is_query_hot) {
-				// dc_update(&dc_meta, "AUTHDUMMY", 1); // XXX HACK to log any POST req. only ONCE.
-				if (is_form) {
-					// Display decoded variables
-					p = gquery;
-					char *n;
-					while ((n = strchr(p, '&'))) {
-						*n = '\0';
-						buf_putf(&outbuf, "\n%s", p);
-						p = n + 1;
-					}
-					buf_putf(&outbuf, "\n%s", p); // remainder
-				} else if (is_json || Opt_verbose) {
-					buf_putf(&outbuf, "\n%s", pquery);
-					// dc_update(&dc_meta, pquery, cont_len);
-				}
+		}
+		if (is_pquery_hot || Opt_verbose) {
+			if (is_json || Opt_verbose) {
+				buf_hot(&outbuf, pquery, is_pquery_hot);
 			}
 		}
 	} //while ((i = buf_index(&inbuf, "\r\n\r\n", 4)) >= 0) 
