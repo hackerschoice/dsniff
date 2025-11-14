@@ -53,6 +53,10 @@ AC_CHECK_LIB(nsl, gethostbyname)
 dnl XXX - feh, everything except OpenBSD sux.
 AC_CHECK_LIB(resolv, dn_expand)
 AC_CHECK_LIB(resolv, __dn_expand)
+dnl We cant tell if the static libnids.a is build with glib2. Better add
+dnl it just in case.
+AC_CHECK_LIB(glib-2.0, g_mutex_init)
+AC_CHECK_LIB(gthread-2.0, g_thread_init)
 AC_REPLACE_FUNCS(dirname strlcpy strlcat strsep)
 needmd5=no
 AC_CHECK_FUNCS(MD5Update, , [needmd5=yes])
@@ -90,10 +94,19 @@ AC_MSG_RESULT([$enable_static])
 if test "x$enable_static" = "xyes"; then
    dnl -static requires to satisfy forward-dependencies
    AC_CHECK_LIB([intl], [libintl_gettext])
-   AC_CHECK_LIB([glib-2.0], [g_mutex_init])
-   AC_CHECK_LIB([gthread-2.0], [g_thread_init])
 fi
 
+AC_MSG_CHECKING([whether to enable BerkelyDB])
+AC_ARG_ENABLE([berkeleydb],
+   [AS_HELP_STRING([--enable-berkeleydb],[Build with BerkeleyDB])],
+   [BDB="yes"], [BDB="no"])
+AC_MSG_RESULT([$BDB])
+if test x"${BDB}" = "xyes"; then
+   AC_DEFINE([WITH_BERKELEYDB], [1], [BLah])
+fi
+
+
+if test x"${BDB}" = xyes; then
 dnl Checks for Berkeley DB
 AC_MSG_CHECKING(for Berkeley DB with 1.85 compatibility)
 AC_ARG_WITH(db,
@@ -168,6 +181,7 @@ AC_ARG_WITH(db,
 )
 AC_SUBST(DBINC)
 AC_SUBST(DBLIB)
+fi
 AC_SUBST(LDFLAGS_STATIC)
 
 dnl Checks for libpcap

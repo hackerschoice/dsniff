@@ -8,7 +8,7 @@
  * $Id: decode_http.c,v 1.17 2001/03/15 08:32:59 dugsong Exp $
  */
 
-#include "config.h"
+#include "common.h"
 
 #include <sys/types.h>
 
@@ -39,11 +39,27 @@ static regex_t		*user_regex, *pass_regex;
 extern struct _dc_meta dc_meta;
 
 static int
-grep_query_auth(char *buf)
+grep_pquery_auth(char *buf) {
+
+	if (buf == NULL)
+		return 0;
+	if (regexec(pass_regex, buf, 0, NULL, 0) == 0)
+		return 1;
+
+	if (regexec(user_regex, buf, 0, NULL, 0) == 0)
+		return 1;
+
+	return 0;
+}
+
+static int
+grep_gquery_auth(char *buf)
 {
 	char *p, *q, *tmp;
 	int user, pass;
 
+	if (buf == NULL)
+		return 0;
 	user = pass = 0;
 	
 	if ((tmp = strdup(buf)) == NULL)
@@ -101,10 +117,8 @@ int
 decode_http(u_char *buf, int len, u_char *obuf, int olen)
 {
 	struct buf *msg, inbuf, outbuf;
-	char *p, *req, *auth, *pauth, *gquery, *query, *host, *cookie, *agent, *location = NULL, *http_resp = NULL;
+	char *p, *req, *auth, *pauth, *gquery, *pquery, *host, *cookie, *agent, *location = NULL, *http_resp = NULL;
 	int i;
-	int is_sec;
-	int is_query_auth;
 	int is_http_ok = 1; // default assume OK
 	char dom[1024];
 	char *type;
@@ -122,7 +136,8 @@ decode_http(u_char *buf, int len, u_char *obuf, int olen)
 		    regcomp(pass_regex, PASS_REGEX, REGEX_FLAGS))
 			errx(1, "regcomp failed");
 	}
-	is_sec = 0;
+
+	// Check SERVER's answer
 	if ((dc_meta.rbuf) && (p = strtok(dc_meta.rbuf, "\r\n")) && (strlen(p) > 12)) {
 		http_resp = p + 9;
 		if (p[9] != '2')
@@ -131,15 +146,23 @@ decode_http(u_char *buf, int len, u_char *obuf, int olen)
 			while ((p = strtok(NULL, "\r\n")) != NULL) {
 				if (strncasecmp(p, "Location: ", 10) != 0)
 					continue;
-
-				location = p + 10;
-				if (strstr(location, "https://"))
-					is_sec = 1; // http -> https redirects can be intercepted.
+				if (strstr(p + 10, "https://") != NULL) {
+					location = p + 10;
+					dc_meta.is_hot = 1; // http -> https redirects can be intercepted.
+				}
 				break;
 			}
 		}
 	}
+
+	// Parse CLIENT's submission
 	while ((i = buf_index(&inbuf, "\r\n\r\n", 4)) >= 0) {
+		int is_json = 0;
+		int is_form = 0;
+		int cont_len = 0;
+		int is_hot = 0;
+		int is_query_hot = 0;
+
 		msg = buf_tok(&inbuf, NULL, i);
 		msg->base[msg->end] = '\0';
 		buf_skip(&inbuf, 4);
@@ -156,58 +179,65 @@ decode_http(u_char *buf, int len, u_char *obuf, int olen)
 		} else
 			continue;
 
-		auth = pauth = query = host = cookie = agent = NULL;
+		auth = pauth = gquery = pquery = host = cookie = agent = NULL;
 
-		if ((query = strchr(uri_prot, '?')) != NULL) {
-			query++;
-			gquery = query;
+		if ((gquery = strchr(uri_prot, '?')) != NULL) {
+			gquery++;
 		}
 
 		while ((p = strtok(NULL, "\r\n")) != NULL) {
 			if (strncasecmp(p, "Authorization: Basic ", 21) == 0) {
 				auth = p;
-				is_sec = 1;
+				is_hot = 1;
 			}				
 			else if (strncasecmp(p, "Proxy-authorization: Basic ", 27) == 0) {
 				pauth = p;
-				is_sec = 1;
+				is_hot = 1;
 			}
 			else if (strncasecmp(p, "Host: ", 6) == 0) {
 				host = p + 6;
 			}
 			else if (strncasecmp(p, "Cookie: ", 8) == 0) {
 				cookie = p + 8;
-				is_sec = 1;
+				// Cookies are alwasy "hot"
+				is_hot = 1;
 			}
 			else if (strncasecmp(p, "User-Agent: ", 12) == 0) {
 				agent = p;
 			}
 			else if (type[0] == 'P') {
+				// POST
 				if (strncasecmp(p, "Content-type: ", 14) == 0) {
-					if (strncmp(p + 14, "application/"
-						    "x-www-form-urlencoded",
-						    33) != 0) {
-						query = NULL;
-					}
+					if (strncmp(p + 14, "application/x-www-form-urlencoded", 33) == 0)
+						is_form = 1;
+					else if (strncmp(p + 14, "application/json", 16) == 0)
+						is_json = 1;
 				}
 				else if (strncasecmp(p, "Content-length: ", 16) == 0) {
 					p += 16;
-					i = atoi(p);
-					if ((msg = buf_tok(&inbuf, NULL, i)) == NULL)
-						continue;
-					msg->base[msg->end] = '\0';
-					query = buf_ptr(msg);
+					cont_len = atoi(p);
 				}
 			}
 		} // while()
+		// HERE: Header done.
 
-		is_query_auth = 0;
-		if (query) {
-			is_query_auth = grep_query_auth(query);
-			if (is_query_auth)
-				is_sec = 1;
+		if (cont_len > 0) {
+			if ((msg = buf_tok(&inbuf, NULL, cont_len)) != NULL) {
+				msg->base[msg->end] = '\0';
+				pquery = buf_ptr(msg);
+				cont_len = msg->end; // in case cont_len was longer than sniffed data.
+			} else
+				cont_len = 0;
 		}
-		if (Opt_verbose || cookie || auth || pauth || is_query_auth) {
+
+		// Check if queries contain keywords ['password' etc]
+		if (grep_gquery_auth(gquery))
+			is_query_hot++;
+		if (grep_pquery_auth(pquery))
+			is_query_hot++;
+		is_hot += is_query_hot;
+
+		if (Opt_verbose || is_hot || location) {
 			if (buf_tell(&outbuf) > 0)
 				buf_putf(&outbuf, "\n\n");
 			
@@ -233,16 +263,16 @@ decode_http(u_char *buf, int len, u_char *obuf, int olen)
 
 			if (http_resp)
 				buf_putf(&outbuf, " >>> %s", http_resp);
-			if (is_sec) 
+			if (is_hot) 
 				dc_meta.is_hot = 1;
 			
 			// DUP check up to '?'
 			// Anti-Fuzzing: Ignore requests to same host with different 'req' but log if Cookie/Auth is supplied
 			// On "-vv" add URI to CRC (and thus log different URIs)
-			if ((!Opt_show_dups) && (is_http_ok) && ((is_sec) || (Opt_verbose >= 2)) ) {
-				// Only dup-check up to "?"
+			if ((!Opt_show_dups) && (is_http_ok) && ((is_hot) || (Opt_verbose >= 2)) ) {
+				// HERE: Do NOT show duplicates.
 				if (gquery)
-					dc_update(&dc_meta, req, gquery - 1 - req);
+					dc_update(&dc_meta, req, gquery - 1 - req); // Only dup-check up to "?"
 				else
 					dc_update(&dc_meta, req, strlen(req));
 			}
@@ -262,7 +292,6 @@ decode_http(u_char *buf, int len, u_char *obuf, int olen)
 				else
 					buf_putf(&outbuf, "\nLocation: %s", location);
 				location = NULL;
-				break; // Stop on LOCATION reply.
 			}
 
 			if (agent)
@@ -287,7 +316,6 @@ decode_http(u_char *buf, int len, u_char *obuf, int olen)
 				p[i] = '\0';
 				buf_putf(&outbuf, " [%s]", p);
 			}
-
 			if (auth) {
 				buf_putf(&outbuf, "\n%s", auth);
 				dc_update(&dc_meta, auth + 21, strlen(auth + 21));
@@ -296,26 +324,30 @@ decode_http(u_char *buf, int len, u_char *obuf, int olen)
 				p[i] = '\0';
 				buf_putf(&outbuf, " [%s]", p);
 			}
-			else if (type[0] == 'P' && query && query != gquery) {
-				if (is_query_auth)
-					dc_update(&dc_meta, "AUTHDUMMY", 1); // XXX HACK to log any POST req. only ONCE.
-
-				p = query;
-				char *n;
-				while ((n = strchr(p, '&'))) {
-					*n = '\0';
-					buf_putf(&outbuf, "\n%s", p);
-					p = n + 1;
+			if (type[0] == 'P' && is_query_hot) {
+				// dc_update(&dc_meta, "AUTHDUMMY", 1); // XXX HACK to log any POST req. only ONCE.
+				if (is_form) {
+					// Display decoded variables
+					p = gquery;
+					char *n;
+					while ((n = strchr(p, '&'))) {
+						*n = '\0';
+						buf_putf(&outbuf, "\n%s", p);
+						p = n + 1;
+					}
+					buf_putf(&outbuf, "\n%s", p); // remainder
+				} else if (is_json || Opt_verbose) {
+					buf_putf(&outbuf, "\n%s", pquery);
+					// dc_update(&dc_meta, pquery, cont_len);
 				}
-				buf_putf(&outbuf, "\n%s", p);
 			}
 		}
 	} //while ((i = buf_index(&inbuf, "\r\n\r\n", 4)) >= 0) 
 	buf_end(&outbuf);
 
 	// HTTP response was not 2xx. Only log if Cookie/Auth was found.
-	if ((!is_http_ok) && (!is_sec))
-		return 0;
-	
-	return (buf_len(&outbuf));
+	if (dc_meta.is_hot || (Opt_verbose && is_http_ok))
+		return buf_len(&outbuf);
+
+	return 0;
 }

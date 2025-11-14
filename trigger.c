@@ -425,17 +425,21 @@ trigger_tcp(struct tcp_stream *ts, void **conn_save)
 	switch (ts->nids_state) {
 		
 	case NIDS_JUST_EST:
-		if (Opt_verbose) {
-			// Collect SSH banner from both sides.
-			ts->server.collect = 1;
-			ts->client.collect = 1;
-		}
-		if (ct != NULL || Opt_magic) {
-			ts->server.collect = 1;
-		}
-		if (st != NULL) {
-			ts->client.collect = 1;
-		}
+		// Always collect from both sides because HTTP-response
+		// may contain "Location" redirect to https, which is HOTHOTHOT.
+		ts->server.collect = 1;
+		ts->client.collect = 1;
+		// if (Opt_verbose) {
+		// 	// Collect SSH banner from both sides.
+		// 	ts->server.collect = 1;
+		// 	ts->client.collect = 1;
+		// }
+		// if (ct != NULL || Opt_magic) {
+		// 	ts->server.collect = 1;
+		// }
+		// if (st != NULL) {
+		// 	ts->client.collect = 1;
+		// }
 		break;
 	
 	case NIDS_DATA:

@@ -18,11 +18,13 @@
 #include <string.h> 
 #include <time.h>
 #include <md5.h>
+#ifdef WITH_BERKELEY_DB
 #ifdef HAVE_DB_185_H
 #define DB_LIBRARY_COMPATIBILITY_API
 #include <db_185.h>
 #elif HAVE_DB_H
 #include <db.h>
+#endif
 #endif
 #include <libnet.h>
 
@@ -68,6 +70,7 @@ dupdb_is_new(uint32_t crc) {
 	return true;
 }
 
+#ifdef WITH_BERKELEY_DB
 static DB *db;
 
 static int
@@ -85,6 +88,7 @@ xdr_rec(XDR *xdrs, struct rec *rec)
 	}
 	return (0);
 }
+#endif
 
 static void
 record_print(struct rec *rec)
@@ -153,6 +157,7 @@ record_print(struct rec *rec)
 	fflush(stdout);
 }
 
+#ifdef WITH_BERKELEY_DB
 static DBT *
 record_hash(struct rec *rec)
 {
@@ -174,10 +179,12 @@ record_hash(struct rec *rec)
 	
 	return (&key);
 }
+#endif
 
 static int
 record_save(struct rec *rec)
 {
+#ifdef WITH_BERKELEY_DB
 	DBT *key, data;
 	XDR xdrs;
 	u_char buf[2048];
@@ -196,13 +203,14 @@ record_save(struct rec *rec)
 	
 	if (db->put(db, key, &data, R_NOOVERWRITE) == 0)
 		db->sync(db, 0);
-	
+#endif
 	return (1);
 }
 
 void
 record_dump(void)
 {
+#ifdef WITH_BERKELEY_DB
 	DBT key, data;
 	XDR xdrs;
 	struct rec rec;
@@ -216,11 +224,13 @@ record_dump(void)
 		}
 		xdr_destroy(&xdrs);
 	}
+#endif
 }
 
 int
 record_init(char *file)
 {
+#ifdef WITH_BERKELEY_DB
 	int flags, mode;
 	
 	if (Opt_read) {
@@ -233,7 +243,7 @@ record_init(char *file)
 	}
 	if ((db = dbopen(file, flags, mode, DB_BTREE, NULL)) == NULL)
 		return (0);
-
+#endif
 	return (1);
 }
 
@@ -285,6 +295,8 @@ record(in_addr_t src, in_addr_t dst, int proto, u_short sport, u_short dport,
 void
 record_close(void)
 {
+#ifdef WITH_BERKELEY_DB
 	db->close(db);
+#endif
 }
 

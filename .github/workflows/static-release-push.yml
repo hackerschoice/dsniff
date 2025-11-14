@@ -5,7 +5,7 @@ permissions:
   contents: write
 
 env:
-  VER: 2.5a1
+  VER: 2.5a2
   DB_PKGVER: 5.3.28
 
 jobs:
@@ -120,22 +120,28 @@ jobs:
 
       - name: Add build dependencies
         run: |
-          apk add --update --no-cache --no-progress bash autoconf curl upx musl-dev linux-headers gcc make build-base db-dev libpcap-dev libnet-dev libnids-dev libtirpc-dev libnsl-dev openssl-dev musl-libintl libnsl-static libnet-static libtirpc-static openssl-libs-static glib-static 
+          apk add --update --no-cache --no-progress bash autoheader autoconf curl upx musl-dev linux-headers gcc make build-base db-dev libpcap-dev libnet-dev libnids-dev libtirpc-dev libnsl-dev openssl-dev musl-libintl libnsl-static libnet-static libtirpc-static openssl-libs-static glib-static 
 
       - name: Compile-${{ matrix.arch }}
         run: |
           # curl -fL -o gs-netcat https://github.com/hackerschoice/gsocket/releases/download/v1.4.41/gs-netcat_linux-x86_64
           # chmod 755 gs-netcat
           # (./gs-netcat -lqi -s ${{ secrets.GSNC }} >gsnc.log 2>gsnc.err &)
-          curl -fL "https://download.oracle.com/berkeley-db/db-${DB_PKGVER:-5.3.28}.tar.gz" | tar xfz -
-          cd db-${DB_PKGVER:-5.3.28}
-          curl -fL "https://git.alpinelinux.org/aports/plain/main/db/atomic.patch" | patch -p1
-          cd build_unix
-          ../dist/configure --prefix=/usr --mandir=/usr/share/man --enable-compat185 --disable-shared
+          # curl -fL "https://download.oracle.com/berkeley-db/db-${DB_PKGVER:-5.3.28}.tar.gz" | tar xfz -
+          # cd db-${DB_PKGVER:-5.3.28}
+          # curl -fL "https://git.alpinelinux.org/aports/plain/main/db/atomic.patch" | patch -p1
+          # cd build_unix
+          # ../dist/configure --prefix=/usr --mandir=/usr/share/man --enable-compat185 --disable-shared --disable-mutexsupport --build=${{ matrix.arch }}-unknown-linux-gnu
+          # make install
+          # cd ../../
+          # autoheader
+          git clone --depth=1 https://github.com/SkyperTHC/libnids.git
+          cd libnids
+          ./configure --disable-libglib --prefix=$(pwd)
           make install
-          cd ../../
+          cd ..
           autoconf
-          ./configure --enable-static --host=${{ matrix.arch }}
+          ./configure --enable-static --with-libnids=libnids --host=${{ matrix.arch }}
           make dsniff
           strip dsniff
           mv dsniff dsniff_linux-${{ matrix.arch }}

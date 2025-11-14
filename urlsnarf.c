@@ -342,7 +342,7 @@ main(int argc, char *argv[])
 	struct pcap_pkthdr *h;
 	u_char *d;
 	int rc;
-	while ((rc = pcap_next_ex(p, &h, &d)) == 1) {
+	while ((rc = pcap_next_ex(p, &h, (const u_char **)&d)) == 1) {
 		tt = h->ts.tv_sec;
 		nids_pcap_handler(NULL, h, d);
 	}

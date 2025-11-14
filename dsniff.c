@@ -50,7 +50,7 @@ usage(void)
 {
 	fprintf(stderr, "Version: " VERSION "\n"
 "Usage: dsniff [-cdamDNPCv] [-i interface | -p pcapfile] [-s snaplen]\n"
-"              [-f services] [-t trigger[,...]] [-r|-w savefile]\n"
+"              [-f services] [-t trigger[,...]]\n"
 "              [pcap filter]\n"
 " -c         Half-duplex TCP stream assembly\n"
 " -a         Show duplicates\n"
@@ -59,7 +59,7 @@ usage(void)
 " -D         Disable DPI. Only decode known ports.\n"
 " -m         Force DPI also on known ports (e.g. ignore /etc/services).\n"
 "            For example, -m will detect SSH on port 443 (https).\n"
-" -C         Force color output even if not a TTY\n"
+" -C         Force color output even if not a TTY (disable color: dsniff|cat)\n"
 " -N         Resolve IP addresses to hostname\n"
 " -P         Enable promisc mode\n"
 " -t <...>   Force a decoding method for a specific port/protocol.\n"
@@ -67,8 +67,10 @@ usage(void)
 " -i <link>  Specify the interface to listen on\n"
 " -p <file>  Read from pcap file\n"
 " -s <len>   Analyze at most the first snaplen of each TCP connection [default: %d]\n"
+#ifdef WITH_BERKELEY_DB
 " -w <db>    Write sniffed sessions to db rather then printing them out\n"
 " -r <db>    Read sniffed sessions from a db created with the -w option\n"
+#endif
 "\n" 
 " Example:\n"
 "   dsniff -i eth0 -C >log.txt\n", MIN_SNAPLEN);
@@ -226,10 +228,6 @@ main(int argc, char *argv[])
 		case 'p':
 			nids_params.filename = optarg;
 			break;
-		case 'r':
-			Opt_read = 1;
-			savefile = optarg;
-			break;
 		case 's':
 			if ((Opt_snaplen = atoi(optarg)) == 0)
 				usage();
@@ -238,10 +236,16 @@ main(int argc, char *argv[])
 			triggers = optarg;
 			trigger_init_list(triggers);
 			break;
+#ifdef WITH_BERKELEY_DB
+		case 'r':
+			Opt_read = 1;
+			savefile = optarg;
+			break;
 		case 'w':
 			Opt_write = 1;
 			savefile = optarg;
 			break;
+#endif
 		default:
 			usage();
 		}
@@ -253,14 +257,14 @@ main(int argc, char *argv[])
 		usage();
 	if (Opt_write && (Opt_color < 2))
 		Opt_color = 0; // Disable color for to DB.
-	
+
 	if (!record_init(savefile))
 		err(1, "record_init");
 	
 	signal(SIGHUP, sig_hup);
 	signal(SIGINT, sig_die);
 	signal(SIGTERM, sig_die);
-	
+
 	if (Opt_read) {
 		record_dump();
 		record_close();
