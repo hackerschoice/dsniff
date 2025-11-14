@@ -53,13 +53,16 @@ jobs:
           prepare: |
             pkg_info -Q autoconf
             pkg_info -Q automake
+            pkg_info -Q openssl
+            pkg_info -Q libnids
+            pkg_info -Q libnet
             pkg_add curl
-            pkg_add openssl-3.0.8
-            pkg_add gcc-11.2.0p3
+            pkg_add openssl
+            pkg_add gcc
             pkg_add gmake
             pkg_add tar
-            pkg_add libnet-1.1.6v0
             pkg_add libnids
+            pkg_add libnet
 
           run: |
             a="$(echo /usr/local/bin/autoconf-*)"
@@ -122,7 +125,7 @@ jobs:
 
       - name: Add build dependencies
         run: |
-          apk add --update --no-cache --no-progress bash git autoconf curl upx musl-dev linux-headers gcc make build-base db-dev libpcap-dev libnet-dev libnids-dev libtirpc-dev libnsl-dev openssl-dev musl-libintl libnsl-static libnet-static libtirpc-static openssl-libs-static glib-static 
+          apk add --update --no-cache --no-progress bash git autoconf curl upx musl-dev linux-headers gcc make build-base db-dev libpcap-dev libnet-dev libtirpc-dev libnsl-dev openssl-dev musl-libintl libnsl-static libnet-static libtirpc-static openssl-libs-static glib-static 
 
       - name: Compile-${{ matrix.arch }}
         run: |
