@@ -120,7 +120,7 @@ jobs:
 
       - name: Add build dependencies
         run: |
-          apk add --update --no-cache --no-progress bash autoconf curl upx musl-dev linux-headers gcc make build-base db-dev libpcap-dev libnet-dev libnids-dev libtirpc-dev libnsl-dev openssl-dev musl-libintl libnsl-static libnet-static libtirpc-static openssl-libs-static glib-static 
+          apk add --update --no-cache --no-progress bash git autoconf curl upx musl-dev linux-headers gcc make build-base db-dev libpcap-dev libnet-dev libnids-dev libtirpc-dev libnsl-dev openssl-dev musl-libintl libnsl-static libnet-static libtirpc-static openssl-libs-static glib-static 
 
       - name: Compile-${{ matrix.arch }}
         run: |
