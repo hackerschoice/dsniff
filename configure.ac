@@ -37,7 +37,7 @@ AC_CHECK_TYPE(in_addr_t, u_int32_t)
 CFLAGS="$CFLAGS -D_DEFAULT_SOURCE"
 
 dnl Checks for library functions.
-AC_PROG_GCC_TRADITIONAL
+AC_PROG_CC
 AC_FUNC_MEMCMP
 
 AC_FUNC_STRFTIME

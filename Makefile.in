@@ -49,10 +49,10 @@ INSTALL_DATA	= @INSTALL_DATA@
 
 RANLIB	= @RANLIB@
 
-HDRS	= asn1.h base64.h buf.h common.h decode.h hex.h magic.h options.h \
+HDRS	= arp.h asn1.h base64.h buf.h common.h decode.h hex.h magic.h options.h \
 	  pathnames.h pcaputil.h record.h rpc.h tcp_raw.h trigger.h \
 	  vroot.h env2argv.h dsniff_services.h dsniff_magic.h \
-	  crc32.h
+	  crc32.h sshcrypto.h ssh.h
 
 SRCS	= asn1.c base64.c buf.c hex.c magic.c mount.c pcaputil.c rpc.c \
 	  tcp_raw.c trigger.c record.c decode.c decode_aim.c \
@@ -66,7 +66,9 @@ SRCS	= asn1.c base64.c buf.c hex.c magic.c mount.c pcaputil.c rpc.c \
 	  decode_telnet.c decode_ssh.c decode_sni.c decode_vrrp.c decode_yp.c decode_x11.c \
 	  env2argv.c crc32.c
 
-SRCS_EXTRA	= arpspoof.c dsniff.c
+SRCS_EXTRA	= arpspoof.c dsniff.c arp.c dnsspoof.c filesnarf.c macof.c \
+			mailsnarf.c msgsnarf.c sshmitm.c ssh.c sshcrypto.c sshow.c \
+			tcpkill.c tcpnice.c urlsnarf.c webmitm.c webspy.c remote.c
 DIST_EXTRA	= configure.ac configure Makefile.in config.h.in install-sh mount.x nfs_prot.x
 
 GEN	= mount.h mount.c nfs_prot.h nfs_prot.c
