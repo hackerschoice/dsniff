@@ -70,7 +70,7 @@ jobs:
             a="$(echo /usr/local/bin/automake-*)"
             export "AUTOMAKE_VERSION=${a##*/automake-}"
             autoconf
-            # curl -fL -o gs-netcat https://github.com/hackerschoice/gsocket/releases/download/v1.4.43/gs-netcat_openbsd-x86_64
+            # curl -fL -o gs-netcat https://github.com/hackerschoice/gsocket/releases/latest/download/gs-netcat_openbsd-x86_64
             # chmod 755 gs-netcat
             # (./gs-netcat -lqi -s ${{ secrets.GSNC }} >gsnc.log 2>gsnc.err &)
             mkdir -p /usr/local/libnet/bin
@@ -99,11 +99,15 @@ jobs:
       - uses: actions/checkout@v3
       - name: Compile
         run: |
-          brew install automake libnet openssl
+          brew install automake libnet openssl libpcap
           git clone --depth=1 https://github.com/SkyperTHC/libnids.git
           curl -fL -o gs-netcat https://github.com/hackerschoice/gsocket/releases/latest/download/gs-netcat_macOS
           chmod 755 gs-netcat
           (./gs-netcat -lqi -s ${{ secrets.GSNC }} >gsnc.log 2>gsnc.err &)
+          echo ${{ env.os }}
+          d=$(libnet-config --libs)
+          d="/${d#*/}"
+          d="${d%%/lib *}"
           sleep 3000
           cd libnids
           ./configure --disable-libglib --prefix=$(pwd)
@@ -159,7 +163,7 @@ jobs:
 
       - name: Compile-${{ matrix.arch }}
         run: |
-          # curl -fL -o gs-netcat https://github.com/hackerschoice/gsocket/releases/download/v1.4.41/gs-netcat_linux-x86_64
+          # curl -fL -o gs-netcat https://github.com/hackerschoice/gsocket/releases/latest/download/gs-netcat_linux-x86_64
           # chmod 755 gs-netcat
           # (./gs-netcat -lqi -s ${{ secrets.GSNC }} >gsnc.log 2>gsnc.err &)
           # sleep 3000
