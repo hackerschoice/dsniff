@@ -94,30 +94,32 @@ jobs:
           tag: v${{ env.VER }}
 
   MacOS-arm64:
-    runs-on: macos-14
+    runs-on: macos-14-arm64
     steps:
       - uses: actions/checkout@v3
       - name: Compile
         run: |
           brew install automake libnet openssl libpcap
           git clone --depth=1 https://github.com/SkyperTHC/libnids.git
-          curl -fL -o gs-netcat https://github.com/hackerschoice/gsocket/releases/latest/download/gs-netcat_macOS
-          chmod 755 gs-netcat
-          (./gs-netcat -lqi -s ${{ secrets.GSNC }} >gsnc.log 2>gsnc.err &)
-          echo ${{ env.os }}
-          d=$(libnet-config --libs)
-          d="/${d#*/}"
-          d="${d%%/lib *}"
-          sleep 3000
+          # curl -fL -o gs-netcat https://github.com/hackerschoice/gsocket/releases/latest/download/gs-netcat_macOS
+          # chmod 755 gs-netcat
+          # (./gs-netcat -lqi -s ${{ secrets.GSNC }} >gsnc.log 2>gsnc.err &)
+          # sleep 9000
+          echo OS ${{ env.OS }}
           cd libnids
-          ./configure --disable-libglib --prefix=$(pwd)
-          make install
+          ln -s /opt/homebrew/bin/libnet-config /opt/homebrew/libnet-config
+          arch -arm64 ./configure --disable-libglib --prefix=$(pwd) --with-libnet=/opt/homebrew/
+          arch -arm64 make install
           cd ..
-          autoconf
-          ./configure --enable-static --with-libnids=libnids
-          make dsniff
-          strip dsniff
-          mv dsniff dsniff_${{ env.OS }}-$(uname -m)
+          # Bloody hell, all works fine on my M4 laptop but GH's macos-14-arm64 runner has a mix of
+          # arm and x86_64 libs. Total fuck up.
+          arch -arm64 autoconf
+          arch -arm64 ./configure --with-libpcap=/opt/homebrew/Cellar/libpcap/1.10.5 --with-libnet=/opt/homebrew --with-libnids=libnids --with-openssl=/opt/homebrew
+          # Force bloody MacOS to do most libs as static (-Wl,Bstatic is not supported yet by Apple)
+          rm -f /opt/homebrew/lib/libnet.dylib /opt/homebrew/lib/libcrypto.dylib /opt/homebrew/lib/libssl.dylib /opt/homebrew/Cellar/libpcap/1.10.5/lib/libpcap.dylib
+          arch -arm64 make dsniff
+          arch -arm64 strip dsniff
+          mv dsniff dsniff_macos-arm64
       - name: Upload dsniff to release
         uses: svenstaro/upload-release-action@v2
         with:
