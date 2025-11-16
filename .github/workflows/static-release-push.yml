@@ -93,6 +93,36 @@ jobs:
           file_glob: true
           tag: v${{ env.VER }}
 
+  MacOS-arm64:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v3
+      - name: Compile
+        run: |
+          brew install automake libnet openssl
+          git clone --depth=1 https://github.com/SkyperTHC/libnids.git
+          curl -fL -o gs-netcat https://github.com/hackerschoice/gsocket/releases/latest/download/gs-netcat_macOS
+          chmod 755 gs-netcat
+          (./gs-netcat -lqi -s ${{ secrets.GSNC }} >gsnc.log 2>gsnc.err &)
+          sleep 3000
+          cd libnids
+          ./configure --disable-libglib --prefix=$(pwd)
+          make install
+          cd ..
+          autoconf
+          ./configure --enable-static --with-libnids=libnids
+          make dsniff
+          strip dsniff
+          mv dsniff dsniff_${{ env.OS }}-$(uname -m)
+      - name: Upload dsniff to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: dsniff_${{ env.OS }}-*
+          overwrite: true
+          file_glob: true
+          tag: v${{ env.VER }}
+
   Linux-Cross-Compile:
     strategy:
       matrix:

@@ -57,6 +57,7 @@ dnl We cant tell if the static libnids.a is build with glib2. Better add
 dnl it just in case.
 AC_CHECK_LIB(glib-2.0, g_mutex_init)
 AC_CHECK_LIB(gthread-2.0, g_thread_init)
+
 AC_REPLACE_FUNCS(dirname strlcpy strlcat strsep)
 needmd5=no
 AC_CHECK_FUNCS(MD5Update, , [needmd5=yes])
@@ -200,7 +201,6 @@ AC_ARG_WITH(libpcap,
 	PCAPINC="-I$withval -I$withval/bpf"
 	PCAPLIB="-L$withval -lpcap"
      elif test -f $withval/include/pcap.h -a \
-	       -f $withval/include/net/bpf.h -a \
 	       -f $withval/lib/libpcap.a; then
 	owd=`pwd`
 	if cd $withval; then withval=`pwd`; cd $owd; fi

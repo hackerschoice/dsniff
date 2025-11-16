@@ -141,11 +141,21 @@ buf_hot_header(struct buf *o, char *p) {
 		buf_putf(o, "\n%s", p);
 }
 
+#define DS_PAYLOAD_MAX_OUT             (1024)
 static void
-buf_hot(struct buf *o, char *p, int is_hot) {
+buf_hot(struct buf *o, char *p, int len, int is_hot) {
 	if (!p)
 		return;
 
+	if (len <= 0)
+		return;
+	if (*p == '\0') {
+		buf_put(o, "\n", 1);
+		buf_put_hex(o, p, MIN(len, DS_PAYLOAD_MAX_OUT / 4), 0);
+		if (len > DS_PAYLOAD_MAX_OUT / 4)
+			buf_putf(o, "  <...%d bytes omitted...>", len - DS_PAYLOAD_MAX_OUT / 4);
+		return;
+	}
 	if (is_hot && Opt_color) {
 		buf_putf(o, "\n"CDR"%s"CN, p);
 	} else
@@ -285,6 +295,8 @@ decode_http(u_char *buf, int len, u_char *obuf, int olen)
 				msg->base[msg->end] = '\0';
 				pquery = buf_ptr(msg);
 				cont_len = msg->end; // in case cont_len was longer than sniffed data.
+				// Telegram web sends "Content-Type: application/x-www-form-urlencoded"
+				// followed by binary data (not urgl-encoded). 
 			} else
 				cont_len = 0;
 		}
@@ -405,7 +417,7 @@ decode_http(u_char *buf, int len, u_char *obuf, int olen)
 		}
 		if (is_pquery_hot || Opt_verbose) {
 			if (is_json || Opt_verbose) {
-				buf_hot(&outbuf, pquery, is_pquery_hot);
+				buf_hot(&outbuf, pquery, cont_len, is_pquery_hot);
 			}
 		}
 	} //while ((i = buf_index(&inbuf, "\r\n\r\n", 4)) >= 0) 

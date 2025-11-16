@@ -118,6 +118,37 @@ buf_putf(buf_t buf, const char *fmt, ...)
 	return (i);
 }
 
+/* adapted from OpenBSD tcpdump: dump the buffer in emacs-hexl format */
+void
+buf_put_hex(buf_t buf, const u_char *data, int len, int offset)
+{
+	u_int i, j, jm;
+	int c;
+	
+	for (i = 0; i < len; i += 0x10) {
+		buf_putf(buf, "  %04x: ", (u_int)(i + offset));
+		jm = len - i;
+		jm = jm > 16 ? 16 : jm;
+		
+		for (j = 0; j < jm; j++) {
+			if ((j % 2) == 1) buf_putf(buf, "%02x ", (u_int) data[i+j]);
+			else buf_putf(buf, "%02x", (u_int) data[i+j]);
+		}
+		for (; j < 16; j++) {
+			if ((j % 2) == 1) buf_put(buf, "   ", 3);
+			else buf_put(buf, "  ", 2);
+		}
+		buf_putf(buf, " ");
+		
+		for (j = 0; j < jm; j++) {
+			c = data[i+j];
+			c = isprint(c) ? c : '.';
+			buf_put(buf, &c, 1);
+		}
+		buf_put(buf, "\n", 1);
+	}
+}
+
 void
 buf_end(buf_t buf)
 {

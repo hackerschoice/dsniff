@@ -31,7 +31,7 @@
 
 #include "arp.h"
 
-extern char *ether_ntoa(struct ether_addr *);
+extern char *ether_ntoa(const struct ether_addr *);
 
 struct host {
 	in_addr_t ip;

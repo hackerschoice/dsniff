@@ -53,6 +53,7 @@ int	buf_get(buf_t buf, void *dst, int len);
 /* Write to buffer. */
 int	buf_put(buf_t buf, void *src, int len);
 int	buf_putf(buf_t buf, const char *fmt, ...);
+void buf_put_hex(buf_t buf, const u_char *data, int len, int offset);
 
 /* Finalize buffer. */
 void	buf_end(buf_t buf);

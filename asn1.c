@@ -6,7 +6,7 @@
  * $Id: asn1.c,v 1.4 2001/03/15 08:32:58 dugsong Exp $
  */
 
-#include "config.h"
+#include "common.h"
 
 #include <sys/types.h>
 #include <arpa/nameser.h>

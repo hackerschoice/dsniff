@@ -12,7 +12,7 @@
 #include <sys/types.h>
 #include <sys/ioctl.h>
 
-#if defined(BSD) && !defined(__FreeBSD__)
+#if defined(BSD) && !defined(__FreeBSD__) && !defined(__APPLE__)
 # define WITH_BPF   1
 #endif
 
