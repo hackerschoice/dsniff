@@ -77,6 +77,7 @@ static struct _ds_service dsx[] = {
 {"http",        8080,    DSNIFF_SERVICE_tcp},
 {"http",        8081,    DSNIFF_SERVICE_tcp},
 {"http",        8090,    DSNIFF_SERVICE_tcp},
+{"https",       8443,    DSNIFF_SERVICE_tcp},
 // {"napster",     8888,    DSNIFF_SERVICE_tcp},
 // {"aim",         9898,    DSNIFF_SERVICE_tcp},
 //{"pcanywhere",  65301,   DSNIFF_SERVICE_tcp},

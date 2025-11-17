@@ -1,5 +1,11 @@
 name: Static Post-Release Build
-on: [workflow_dispatch]
+on:
+  workflow_dispatch:
+    inputs:
+      ver:
+        description: 'Version'
+        required: true
+        default: '2.5a2'
 
 permissions:
   contents: write
@@ -37,7 +43,7 @@ jobs:
           file: dsniff_${{ env.OS }}-*
           overwrite: true
           file_glob: true
-          tag: v${{ env.VER }}
+          tag: v${{ github.event.inputs.ver }}
 
 # https://github.com/vmactions/openbsd-vm
   OpenBSD:
@@ -91,10 +97,10 @@ jobs:
           file: dsniff_${{ env.OS }}-*
           overwrite: true
           file_glob: true
-          tag: v${{ env.VER }}
+          tag: v${{ github.event.inputs.ver }}
 
   MacOS-arm64:
-    runs-on: macos-14-arm64
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v3
       - name: Compile
@@ -127,7 +133,7 @@ jobs:
           file: dsniff_${{ env.OS }}-*
           overwrite: true
           file_glob: true
-          tag: v${{ env.VER }}
+          tag: v${{ github.event.inputs.ver }}
 
   Linux-Cross-Compile:
     strategy:
@@ -194,4 +200,4 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: dsniff_linux-${{ matrix.arch }}
           overwrite: true
-          tag: v${{ env.VER }}
+          tag: v${{ github.event.inputs.ver }}
