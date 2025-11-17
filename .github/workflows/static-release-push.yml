@@ -89,6 +89,7 @@ jobs:
             make dsniff
             strip dsniff
             mv dsniff dsniff_${{ env.OS }}-x86_64
+            ls -al
 
       - name: Upload dsniff to release
         uses: svenstaro/upload-release-action@v2
