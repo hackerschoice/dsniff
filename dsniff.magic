@@ -61,9 +61,9 @@
 >>16	belong		0x7fff7f08
 >>>20	belong		0x00000001	oracle
 
-0	belong		0x0
->4	byte		0x8d		pcanywhere
->5	byte		0x6		pcanywhere
+#0	belong		0x0
+#>4	byte		0x8d		pcanywhere
+#>5	byte		0x6		pcanywhere
 
 132	belong		0x0301060a
 >242	belong		0		tds

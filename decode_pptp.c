@@ -187,19 +187,21 @@ decode_pptp(u_char *buf, int len, u_char *obuf, int olen)
 			if ((p = strchr(name, '\\')) == NULL)
 				p = name;
 			
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 			SHA1_Init(&ctx);
 			SHA1_Update(&ctx, chapch->value.response_v2.peer_challenge, 16);
 			SHA1_Update(&ctx, save_challenge.challenge, 16);
 			SHA1_Update(&ctx, p, strlen(p));
 			SHA1_Final(digest, &ctx);
-			
+#pragma GCC diagnostic pop
+
 			for (i = 0; i < 8; i++) {
 				buf_putf(&outbuf, "%02X", digest[i]);
 			}
 			buf_putf(&outbuf, ":000000000000000000000000000000000000000000000000:");
 			for (i = 0; i < 24; i++) {
-				buf_putf(&outbuf, "%02X",
-					 chapch->value.response_v2.nt[i]);
+				buf_putf(&outbuf, "%02X", chapch->value.response_v2.nt[i]);
 			}
 			buf_put(&outbuf, "\n", 1);
 			

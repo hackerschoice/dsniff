@@ -50,7 +50,7 @@ extern int decode_icq(u_char *, int, u_char *, int);
 extern int decode_napster(u_char *, int, u_char *, int);
 extern int decode_aim(u_char *, int, u_char *, int);
 extern int decode_postgresql(u_char *, int, u_char *, int);
-extern int decode_pcanywhere(u_char *, int, u_char *, int);
+// extern int decode_pcanywhere(u_char *, int, u_char *, int);
 extern int decode_x11(u_char *, int, u_char *, int);
 extern int decode_irc(u_char *, int, u_char *, int);
 extern int decode_portmap(u_char *, int, u_char *, int);
@@ -90,7 +90,7 @@ static struct decode decodes[] = {
 	{ "napster",	decode_napster },
 	{ "aim",	decode_aim },
 	{ "postgresql",	decode_postgresql },
-	{ "pcanywhere", decode_pcanywhere },
+	// { "pcanywhere", decode_pcanywhere },
 	{ "vrrp",	decode_vrrp },
 	{ "x11",	decode_x11 },
 	{ "irc",	decode_irc },

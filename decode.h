@@ -81,23 +81,23 @@ u_char *color_ip(u_char *dst, size_t dsz, in_addr_t ip);
 
 u_char *bufbuf(u_char *big, int blen, u_char *little, int llen);
 
-int	decode_aim(u_char *buf, int len, u_char *obuf, int olen);
+// int	decode_aim(u_char *buf, int len, u_char *obuf, int olen);
 int	decode_citrix(u_char *buf, int len, u_char *obuf, int olen);
 int	decode_cvs(u_char *buf, int len, u_char *obuf, int olen);
 int	decode_ftp(u_char *buf, int len, u_char *obuf, int olen);
 int	decode_hex(u_char *buf, int len, u_char *obuf, int olen);
 int	decode_http(u_char *buf, int len, u_char *obuf, int olen);
-int	decode_icq(u_char *buf, int len, u_char *obuf, int olen);
+// int	decode_icq(u_char *buf, int len, u_char *obuf, int olen);
 int	decode_imap(u_char *buf, int len, u_char *obuf, int olen);
 int	decode_irc(u_char *buf, int len, u_char *obuf, int olen);
 int	decode_ldap(u_char *buf, int len, u_char *obuf, int olen);
 int	decode_mmxp(u_char *buf, int len, u_char *obuf, int olen);
 int	decode_mountd(u_char *buf, int len, u_char *obuf, int olen);
-int	decode_napster(u_char *buf, int len, u_char *obuf, int olen);
+// int	decode_napster(u_char *buf, int len, u_char *obuf, int olen);
 int	decode_nntp(u_char *buf, int len, u_char *obuf, int olen);
 int	decode_oracle(u_char *buf, int len, u_char *obuf, int olen);
 int	decode_ospf(u_char *buf, int len, u_char *obuf, int olen);
-int	decode_pcanywhere(u_char *buf, int len, u_char *obuf, int olen);
+// int	decode_pcanywhere(u_char *buf, int len, u_char *obuf, int olen);
 int	decode_pop(u_char *buf, int len, u_char *obuf, int olen);
 int	decode_poppass(u_char *buf, int len, u_char *obuf, int olen);
 int	decode_portmap(u_char *buf, int len, u_char *obuf, int olen);

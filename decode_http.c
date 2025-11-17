@@ -40,6 +40,73 @@ static regex_t		*user_regex, *pass_regex, *hots_regex;
 
 extern struct _dc_meta dc_meta;
 
+/* Pre-initialized lookup table for hex digit values (returns '*' if not hex) */
+static const unsigned char hex_table[256] = {
+    /* 0..15 */
+    '*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*',
+    /* 16..31 */
+    '*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*',
+    /* 32..47 */
+    '*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*',
+    /* 48..63  '0'..'9' at 48..57 */
+    0,1,2,3,4,5,6,7,8,9,'*','*','*','*','*','*',
+    /* 64..79  'A'..'F' at 65..70 */
+    '*',10,11,12,13,14,15,'*','*','*','*','*','*','*','*','*',
+    /* 80..95 */
+    '*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*',
+    /* 96..111 'a'..'f' at 97..102 */
+    '*',10,11,12,13,14,15,'*','*','*','*','*','*','*','*','*',
+    /* 112..127 */
+    '*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*',
+    /* 128..143 */
+    '*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*',
+    /* 144..159 */
+    '*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*',
+    /* 160..175 */
+    '*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*',
+    /* 176..191 */
+    '*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*',
+    /* 192..207 */
+    '*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*',
+    /* 208..223 */
+    '*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*',
+    /* 224..239 */
+    '*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*',
+    /* 240..255 */
+    '*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*'
+};
+
+/* In-place URL-decode: converts "%xx" -> byte and '+' -> ' ' directly in the input buffer.
+ * The decoded result overwrites the original string.
+ */
+static char *
+url_decode_inplace(char *s) {
+    if (!s) return NULL;
+
+    char *r = s, *w = s;
+
+    while (*r) {
+        if (*r == '%' && r[1] != '\0' && r[2] != '\0') {
+            unsigned char hi = hex_table[(unsigned char)r[1]];
+            unsigned char lo = hex_table[(unsigned char)r[2]];
+            if (hi != '*' && lo != '*') {
+                *w++ = (char)((hi << 4) | lo);
+                r += 3;
+                continue;
+            }
+            /* not valid hex, fall through to copy '%' literally */
+        }
+        if (*r == '+') {
+            *w++ = ' ';
+        } else {
+            *w++ = *r;
+        }
+        r++;
+    }
+    *w = '\0';
+    return s;
+}
+
 static int
 grep_pquery_hots(char *buf) {
 	if (buf == NULL)
@@ -137,6 +204,7 @@ buf_hot_header(struct buf *o, char *p) {
 		col = strchr(p, ':');
 		*col = '\0';
 		buf_putf(o, "\n"CDY"%s:"CDR"%s"CN, p, col + 1);
+		*col = ':';
 	} else
 		buf_putf(o, "\n%s", p);
 }
@@ -199,7 +267,7 @@ decode_http(u_char *buf, int len, u_char *obuf, int olen)
 				if (strncasecmp(p, "Location: ", 10) != 0)
 					continue;
 				if (strstr(p + 10, "https://") != NULL) {
-					location = p + 10;
+					location = url_decode_inplace(p + 10);
 					dc_meta.is_hot = 1; // http -> https redirects can be intercepted.
 				}
 				break;
@@ -231,6 +299,8 @@ decode_http(u_char *buf, int len, u_char *obuf, int olen)
 			type = "CONNECT"; uri_prot = req + 8;
 		} else
 			continue;
+
+		uri_prot = url_decode_inplace(uri_prot);
 
 		key = bearer = auth = pauth = gquery = pquery = host = cookie = agent = NULL;
 
@@ -324,7 +394,7 @@ decode_http(u_char *buf, int len, u_char *obuf, int olen)
 				buf_putf(&outbuf, CB"%s"CDC" %s"CN"?%s", type, uri_prot, gquery);
 				*(gquery -1) = '?';
 			} else {
-				if (p = strchr(uri_prot, ' ')) {
+				if ((p = strchr(uri_prot, ' ')) != NULL) {
 					*p = '\0';
 					buf_putf(&outbuf, CB"%s"CDC" %s"CN" %s", type, uri_prot, p+1);
 					*p = ' ';
