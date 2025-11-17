@@ -89,7 +89,6 @@ jobs:
             make dsniff
             strip dsniff
             mv dsniff dsniff_${{ env.OS }}-x86_64
-            ls -al
 
       - name: Upload dsniff to release
         uses: svenstaro/upload-release-action@v2
@@ -112,13 +111,13 @@ jobs:
           # chmod 755 gs-netcat
           # (./gs-netcat -lqi -s ${{ secrets.GSNC }} >gsnc.log 2>gsnc.err &)
           # sleep 9000
-          echo OS ${{ env.OS }}
+          echo "OS ${{ env.OS }} x $OS ${OSTYPE%%[-0-9]*}"
           cd libnids
           ln -s /opt/homebrew/bin/libnet-config /opt/homebrew/libnet-config
           arch -arm64 ./configure --disable-libglib --prefix=$(pwd) --with-libnet=/opt/homebrew/
           arch -arm64 make install
           cd ..
-          # Bloody hell, all works fine on my M4 laptop but GH's macos-14-arm64 runner has a mix of
+          # Bloody hell, all works fine on my M4 laptop but GH's macos-14 runner has a mix of
           # arm and x86_64 libs. Total fuck up.
           arch -arm64 autoconf
           arch -arm64 ./configure --with-libpcap=/opt/homebrew/Cellar/libpcap/1.10.5 --with-libnet=/opt/homebrew --with-libnids=libnids --with-openssl=/opt/homebrew
@@ -131,7 +130,7 @@ jobs:
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: dsniff_${{ env.OS }}-*
+          file: dsniff_macos-*
           overwrite: true
           file_glob: true
           tag: v${{ github.event.inputs.ver }}
