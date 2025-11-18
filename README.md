@@ -11,12 +11,13 @@
 Download the [Pre Compiled Static Binary](https://github.com/hackerschoice/dsniff/releases/latest) for Linux, FreeBSD and OpenBSD.
 
 ```sh
-curl -SsfL "https://github.com/hackerschoice/dsniff/releases/latest/download/dsniff_linux-$(uname -m)" -o dsniff
+curl -o dsniff -SsfL "https://github.com/hackerschoice/dsniff/releases/latest/download/dsniff_linux-$(uname -m)"
+chmod 755 dsniff
 ```
 
 Run (example):
 ```sh
-export ENV_ARGS="-i eth0 -v -m not port 443" # hide options from the process list
+export ENV_ARGS="-i eth0 -v -m not port 443" # Hide command line options from the process list
 ./dsniff
 ```
 
