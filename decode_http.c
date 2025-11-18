@@ -16,6 +16,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <ctype.h>
 #include <regex.h>
 #include <libgen.h>
 #include <err.h>
@@ -80,8 +81,9 @@ static const unsigned char hex_table[256] = {
  * The decoded result overwrites the original string.
  */
 static char *
-url_decode_inplace(char *s) {
-    if (!s) return NULL;
+url_decode_inplace(char *s, int is_decode_plus) {
+    if (!s)
+		return NULL;
 
     char *r = s, *w = s;
 
@@ -96,7 +98,7 @@ url_decode_inplace(char *s) {
             }
             /* not valid hex, fall through to copy '%' literally */
         }
-        if (*r == '+') {
+        if ((*r == '+') && (is_decode_plus)) {
             *w++ = ' ';
         } else {
             *w++ = *r;
@@ -180,17 +182,23 @@ http_req_dirname(char *req)
 }
 
 static void
-decode_http_form(struct buf *o, char *p) {
+buf_hot_form(struct buf *o, char *p, int is_hot) {
 	// Display decoded variables
 	if (!p)
 		return;
 	char *n;
+
+	if (is_hot && Opt_color)
+		buf_put(o, CDR, sizeof CDR - 1);
 	while ((n = strchr(p, '&'))) {
 		*n = '\0';
 		buf_putf(o, "\n%s", p);
 		p = n + 1;
 	}
 	buf_putf(o, "\n%s", p); // remainder
+
+	if (is_hot && Opt_color)
+		buf_put(o, CN, sizeof CN - 1);
 }
 
 static void
@@ -217,7 +225,7 @@ buf_hot(struct buf *o, char *p, int len, int is_hot) {
 
 	if (len <= 0)
 		return;
-	if (*p == '\0') {
+	if (!isprint(*p)) {
 		buf_put(o, "\n", 1);
 		buf_put_hex(o, p, MIN(len, DS_PAYLOAD_MAX_OUT / 4), 0);
 		if (len > DS_PAYLOAD_MAX_OUT / 4)
@@ -240,6 +248,7 @@ decode_http(u_char *buf, int len, u_char *obuf, int olen)
 	char dom[1024];
 	char *type;
 	char *uri_prot;
+	int is_location_hot = 0;
 
 	buf_init(&inbuf, buf, len);
 	buf_init(&outbuf, obuf, olen);
@@ -267,8 +276,8 @@ decode_http(u_char *buf, int len, u_char *obuf, int olen)
 				if (strncasecmp(p, "Location: ", 10) != 0)
 					continue;
 				if (strstr(p + 10, "https://") != NULL) {
-					location = url_decode_inplace(p + 10);
-					dc_meta.is_hot = 1; // http -> https redirects can be intercepted.
+					location = p + 10; //url_decode_inplace(p + 10, 0);
+					is_location_hot = 1; // http -> https redirects can be intercepted.
 				}
 				break;
 			}
@@ -300,7 +309,7 @@ decode_http(u_char *buf, int len, u_char *obuf, int olen)
 		} else
 			continue;
 
-		uri_prot = url_decode_inplace(uri_prot);
+		// uri_prot = url_decode_inplace(uri_prot);
 
 		key = bearer = auth = pauth = gquery = pquery = host = cookie = agent = NULL;
 
@@ -376,13 +385,16 @@ decode_http(u_char *buf, int len, u_char *obuf, int olen)
 			is_gquery_hot++;
 		if (grep_pquery_hots(pquery))
 			is_pquery_hot++;
-		is_hot += (is_gquery_hot + is_pquery_hot);
+		is_hot += (is_gquery_hot + is_pquery_hot + is_location_hot);
 
-		if (!(Opt_verbose || is_hot || location))
+		if (!(Opt_verbose || is_hot))
 			continue; // Nothing to log. Next header.
 
+		// HERE: Got header data. Start populating output buffer.
+		// If multiple requests-headers per tcp connection, terminate
+		// previous with a single newline.
 		if (buf_tell(&outbuf) > 0)
-			buf_putf(&outbuf, "\n\n");
+			buf_putf(&outbuf, "\n");
 		
 		if (type[0] == 'G' && auth) {
 			req = http_req_dirname(req);
@@ -441,7 +453,9 @@ decode_http(u_char *buf, int len, u_char *obuf, int olen)
 				buf_putf(&outbuf, "\n"CDY"Location"CN": "CDR"%s"CN, location);
 			else
 				buf_putf(&outbuf, "\nLocation: %s", location);
-			location = NULL;
+			location = strchr(location, '?');
+			if (location)
+				location++;
 		}
 		if (agent)
 			buf_putf(&outbuf, "\n%s", agent);
@@ -477,18 +491,31 @@ decode_http(u_char *buf, int len, u_char *obuf, int olen)
 			buf_putf(&outbuf, " [%s]", p);
 		}
 
-		if (is_gquery_hot || Opt_verbose) {
-			if (is_form) {
-				// GET _or_ POST request.
-				// HERE: Must be FORM-DATA. Do not decode other variables after "?" unless
-				// it's FORM-data.
-				decode_http_form(&outbuf, gquery);
+		if (location) {
+			// HERE: Location contains a GET query-string (after '?')
+			if (is_location_hot || Opt_verbose) {
+				buf_hot_form(&outbuf, url_decode_inplace(location, 1 /*decode plus to space */), is_location_hot);
 			}
 		}
-		if (is_pquery_hot || Opt_verbose) {
-			if (is_json || Opt_verbose) {
-				buf_hot(&outbuf, pquery, cont_len, is_pquery_hot);
+		if (is_gquery_hot || Opt_verbose) {
+			if (gquery) {
+					char *str = strchr(gquery, ' ');
+					if (*str)
+						*str = '\0';
 			}
+			// It can happen that type is NOT x-www-form-urlencoded but still contains a query string.
+			if (is_form)
+				buf_hot_form(&outbuf, url_decode_inplace(gquery, 1 /*decode plus to space */), is_gquery_hot);
+			else
+				buf_hot_form(&outbuf, gquery, is_gquery_hot);
+		}
+		while (is_pquery_hot || Opt_verbose) {
+			if ((is_form) && (isprint(*pquery))) {
+				buf_hot_form(&outbuf, url_decode_inplace(pquery, 1 /*decode plus to space */), is_pquery_hot);
+				break;
+			}
+			buf_hot(&outbuf, pquery, cont_len, is_pquery_hot);
+			break;
 		}
 	} //while ((i = buf_index(&inbuf, "\r\n\r\n", 4)) >= 0) 
 	buf_end(&outbuf);
