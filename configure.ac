@@ -89,10 +89,11 @@ fi
 AC_MSG_CHECKING([whether to enable static build])
 AC_ARG_ENABLE([static],
 	        [AS_HELP_STRING([--enable-static],[Compile static binary])],
-		[enable_static="yes"; LDFLAGS_STATIC="-static"], [enable_static="no"])
+		[], [enable_static="no"])
 AC_MSG_RESULT([$enable_static])
 
 if test "x$enable_static" = "xyes"; then
+   LDFLAGS_STATIC="-static"
    dnl -static requires to satisfy forward-dependencies
    AC_CHECK_LIB([intl], [libintl_gettext])
 fi
