@@ -6373,6 +6373,7 @@ then :
 
 fi
 
+
 ac_fn_c_check_func "$LINENO" "dirname" "ac_cv_func_dirname"
 if test "x$ac_cv_func_dirname" = xyes
 then :
@@ -6496,7 +6497,7 @@ printf %s "checking whether to enable static build... " >&6; }
 # Check whether --enable-static was given.
 if test ${enable_static+y}
 then :
-  enableval=$enable_static; enable_static="yes"; LDFLAGS_STATIC="-static"
+  enableval=$enable_static;
 else case e in #(
   e) enable_static="no" ;;
 esac
@@ -6506,6 +6507,7 @@ fi
 printf "%s\n" "$enable_static" >&6; }
 
 if test "x$enable_static" = "xyes"; then
+   LDFLAGS_STATIC="-static"
       { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for libintl_gettext in -lintl" >&5
 printf %s "checking for libintl_gettext in -lintl... " >&6; }
 if test ${ac_cv_lib_intl_libintl_gettext+y}
