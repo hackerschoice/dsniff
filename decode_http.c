@@ -182,7 +182,7 @@ http_req_dirname(char *req)
 }
 
 static void
-buf_hot_form(struct buf *o, char *p, int is_hot) {
+buf_hot_form(struct buf *o, char *p, char delim, int is_hot) {
 	// Display decoded variables
 	if (!p)
 		return;
@@ -190,12 +190,15 @@ buf_hot_form(struct buf *o, char *p, int is_hot) {
 
 	if (is_hot && Opt_color)
 		buf_put(o, CDR, sizeof CDR - 1);
-	while ((n = strchr(p, '&'))) {
+	while ((n = strchr(p, delim))) {
 		*n = '\0';
 		buf_putf(o, "\n%s", p);
 		p = n + 1;
+		while (*p == ' ')
+			p++; // Remove cookie space after ';'
 	}
-	buf_putf(o, "\n%s", p); // remainder
+	if (*p)
+		buf_putf(o, "\n%s", p); // remainder
 
 	if (is_hot && Opt_color)
 		buf_put(o, CN, sizeof CN - 1);
@@ -225,7 +228,16 @@ buf_hot(struct buf *o, char *p, int len, int is_hot) {
 
 	if (len <= 0)
 		return;
-	if (!isprint(*p)) {
+
+	// Check if printable..
+	char *ip = p;
+	// char *endp = p + MIN(len, 10); # Check first 10 characters only
+	char *endp = p + len;
+	while (ip < endp && isprint(*ip))
+		ip++;
+
+	if (ip < endp) {
+		// Not printable
 		buf_put(o, "\n", 1);
 		buf_put_hex(o, p, MIN(len, DS_PAYLOAD_MAX_OUT / 4), 0);
 		if (len > DS_PAYLOAD_MAX_OUT / 4)
@@ -245,6 +257,7 @@ decode_http(u_char *buf, int len, u_char *obuf, int olen)
 	char *p, *req, *key, *bearer, *auth, *pauth, *gquery, *pquery, *host, *cookie, *agent, *location = NULL, *http_resp = NULL;
 	int i;
 	int is_http_ok = 1; // default assume OK
+	int is_unauthorized = 0;
 	char dom[1024];
 	char *type;
 	char *uri_prot;
@@ -281,7 +294,8 @@ decode_http(u_char *buf, int len, u_char *obuf, int olen)
 				}
 				break;
 			}
-		}
+		} else if (p[9] == '4' && p[10] == '0' && p[11] == '1')
+			is_unauthorized = 1;
 	}
 
 	// Parse CLIENT's submission
@@ -292,6 +306,7 @@ decode_http(u_char *buf, int len, u_char *obuf, int olen)
 		int is_hot = 0;
 		int is_gquery_hot = 0;
 		int is_pquery_hot = 0;
+		int is_chunked = 0;
 
 		msg = buf_tok(&inbuf, NULL, i);
 		msg->base[msg->end] = '\0';
@@ -347,8 +362,12 @@ decode_http(u_char *buf, int len, u_char *obuf, int olen)
 			}
 			else if (strncasecmp(p, "Cookie: ", 8) == 0) {
 				cookie = p + 8;
-				// Cookies are always "hot"
-				is_hot = 1;
+				// Cookies are always "hot" unless it's a 401 Unauthorized response
+				if (!is_unauthorized)
+					is_hot = 1;
+			}
+			else if (strncasecmp(p, "Transfer-encoding: chunked", 23) == 0) {
+				is_chunked = 1;
 			}
 			else if (strncasecmp(p, "User-Agent: ", 12) == 0) {
 				agent = p;
@@ -368,14 +387,27 @@ decode_http(u_char *buf, int len, u_char *obuf, int olen)
 			}
 		} // while()
 		// HERE: Header done.
-
+		if (is_chunked) {
+			char *endptr;
+			// Only support first chunk for now.
+			while (1) {
+				// Read chunk size line
+				if ((i = buf_index(&inbuf, "\r\n", 2)) < 0)
+					break; // incomplete
+				msg = buf_tok(&inbuf, NULL, i);
+				msg->base[msg->end] = '\0';
+				buf_skip(&inbuf, 2);
+				cont_len = (int)strtol(buf_ptr(msg), &endptr, 16);
+				break;
+			}
+		}
 		if (cont_len > 0) {
 			if ((msg = buf_tok(&inbuf, NULL, cont_len)) != NULL) {
 				msg->base[msg->end] = '\0';
 				pquery = buf_ptr(msg);
-				cont_len = msg->end; // in case cont_len was longer than sniffed data.
+				cont_len = MIN(cont_len, msg->end); // in case cont_len was longer than sniffed data.
 				// Telegram web sends "Content-Type: application/x-www-form-urlencoded"
-				// followed by binary data (not urgl-encoded). 
+				// followed by binary data (not url-encoded). 
 			} else
 				cont_len = 0;
 		}
@@ -467,6 +499,12 @@ decode_http(u_char *buf, int len, u_char *obuf, int olen)
 				buf_putf(&outbuf, "\n"CDR"Cookie"CN": %s", cookie);
 			else
 				buf_putf(&outbuf, "\nCookie: %s", cookie);
+			// De-facto standard is to URL-encode cookies.
+			cookie = url_decode_inplace(cookie, 0);
+			if (Opt_color)
+				buf_put(&outbuf, CF, sizeof CF - 1);
+			buf_hot_form(&outbuf, cookie, ';', 0 /* not red */);
+
 			// Dont catch 'expires=<>' timer (limit to 64). FIXME: Should really disect the cookie and match for 'expires='
 			// Prevent Fuzzing from flooding our log => Use max of 19 dubdb-slots
 			if (!Opt_show_dups) {
@@ -494,7 +532,7 @@ decode_http(u_char *buf, int len, u_char *obuf, int olen)
 		if (location) {
 			// HERE: Location contains a GET query-string (after '?')
 			if (is_location_hot || Opt_verbose) {
-				buf_hot_form(&outbuf, url_decode_inplace(location, 1 /*decode plus to space */), is_location_hot);
+				buf_hot_form(&outbuf, url_decode_inplace(location, 1 /*decode plus to space */), '&', is_location_hot);
 			}
 		}
 		if (is_gquery_hot || Opt_verbose) {
@@ -505,13 +543,13 @@ decode_http(u_char *buf, int len, u_char *obuf, int olen)
 			}
 			// It can happen that type is NOT x-www-form-urlencoded but still contains a query string.
 			if (is_form)
-				buf_hot_form(&outbuf, url_decode_inplace(gquery, 1 /*decode plus to space */), is_gquery_hot);
+				buf_hot_form(&outbuf, url_decode_inplace(gquery, 1 /*decode plus to space */), '&', is_gquery_hot);
 			else
-				buf_hot_form(&outbuf, gquery, is_gquery_hot);
+				buf_hot_form(&outbuf, gquery, '&', is_gquery_hot);
 		}
 		while (is_pquery_hot || Opt_verbose) {
-			if ((is_form) && (isprint(*pquery))) {
-				buf_hot_form(&outbuf, url_decode_inplace(pquery, 1 /*decode plus to space */), is_pquery_hot);
+			if ((is_form) && (pquery && isprint(*pquery))) {
+				buf_hot_form(&outbuf, url_decode_inplace(pquery, 1 /*decode plus to space */), '&', is_pquery_hot);
 				break;
 			}
 			buf_hot(&outbuf, pquery, cont_len, is_pquery_hot);
