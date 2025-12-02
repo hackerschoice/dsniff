@@ -318,37 +318,47 @@ AC_SUBST(NIDSINC)
 AC_SUBST(NIDSLIB)
 
 dnl Checks for OpenSSL
-AC_ARG_WITH(openssl, [  --with-openssl=DIR or yes      use OpenSSL in DIR, or detect with pkg-config], [], [with_openssl=yes])
-
-case "x$with_openssl" in
-  xyes)
-     PKG_CHECK_MODULES([OPENSSL], [libssl libcrypto], [SSLINC="$OPENSSL_CFLAGS"; SSLLIB="$OPENSSL_LIBS"; WEBMITM="webmitm"])
-     ;;
-  x|xno)
-     AC_MSG_CHECKING(for OpenSSL)
+AC_MSG_CHECKING(for OpenSSL)
+AC_ARG_WITH(openssl,
+[  --with-openssl=DIR      use OpenSSL in DIR],
+[ case "$withval" in
+  yes|no)
      AC_MSG_RESULT(no)
      ;;
   *)
-     AC_MSG_CHECKING(for OpenSSL)
-     if test -f $with_openssl/include/openssl/ssl.h -a -f $withval/libssl.a; then
+     AC_MSG_RESULT($withval)
+     if test -f $withval/include/openssl/ssl.h -a -f $withval/libssl.a; then
         owd=`pwd`
-        if cd $with_openssl; then withval=`pwd`; cd $owd; fi
-	SSLINC="-I$with_openssl/include"
-	SSLLIB="-L$with_openssl -lssl -lcrypto"
-     elif test -f $with_openssl/include/openssl/ssl.h -a \
-	       -f $with_openssl/lib/libssl.a; then
+        if cd $withval; then withval=`pwd`; cd $owd; fi
+	SSLINC="-I$withval/include"
+	SSLLIB="-L$withval -lssl -lcrypto"
+     elif test -f $withval/include/openssl/ssl.h -a \
+	       -f $withval/lib/libssl.a; then
 	owd=`pwd`
-	if cd $with_openssl; then withval=`pwd`; cd $owd; fi
-	SSLINC="-I$with_openssl/include"
-	SSLLIB="-L$with_openssl/lib -lssl -lcrypto"
+	if cd $withval; then withval=`pwd`; cd $owd; fi
+	SSLINC="-I$withval/include"
+	SSLLIB="-L$withval/lib -lssl -lcrypto"
      else
-        AC_MSG_ERROR(ssl.h or libssl.a not found in $with_openssl)
+        AC_MSG_ERROR(ssl.h or libssl.a not found in $withval)
      fi
-     AC_MSG_RESULT($with_openssl)
      WEBMITM="webmitm"
      ;;
-esac
-
+  esac ],
+[ if test -f ${prefix}/include/openssl/ssl.h; then
+     SSLINC="-I${prefix}/include"
+     SSLLIB="-L${prefix}/lib -lssl -lcrypto"
+  elif test -f ${prefix}/ssl/include/openssl/ssl.h; then
+     SSLINC="-I${prefix}/ssl/include"
+     SSLLIB="-L${prefix}/ssl/lib -lssl -lcrypto"
+  elif test -f /usr/include/openssl/ssl.h; then
+     SSLLIB="-lssl -lcrypto"
+  else
+     AC_MSG_RESULT(no)
+     AC_MSG_ERROR(OpenSSL not found)
+  fi
+  AC_MSG_RESULT(yes)
+]
+)
 AC_SUBST(SSLINC)
 AC_SUBST(SSLLIB)
 
