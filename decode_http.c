@@ -181,18 +181,42 @@ http_req_dirname(char *req)
 	return (req);
 }
 
+#define BUF_FORM_FL_IS_HOT	    0x01
+#define BUF_FORM_FL_DO_DECODE	0x02
+#define BUF_FORM_FL_SKIP_SINGLE 0x04 // skip output if there is only a single key=value pair
+#define BUF_FORM_FL_DECODE_PLUS	0x08 // decode '+' to space
+#define BUF_FORM_FL_NO_COLOR	0x10
+// Display decoded variables
 static void
-buf_hot_form(struct buf *o, char *p, char delim, int is_hot) {
-	// Display decoded variables
+buf_hot_form(struct buf *o, char *p, char delim, int flag) {
+	char *dc;
+	char *n;
+	int is_color = (Opt_color && !(flag & BUF_FORM_FL_NO_COLOR));
+
 	if (!p)
 		return;
-	char *n;
 
-	if (is_hot && Opt_color)
-		buf_put(o, CDR, sizeof CDR - 1);
+	// Check if we should skip single key=value pairs
+	if (flag & BUF_FORM_FL_SKIP_SINGLE) {
+		n = strchr(p, delim);
+		if (!n)
+			return; // single variable
+		if (*(n + 1) == '\0')
+			return; // ';' present but no further variables thereafter.
+	}
+
+	if (is_color) {
+		if (flag & BUF_FORM_FL_IS_HOT)
+			buf_put(o, CDR, sizeof CDR - 1);
+		else
+			buf_put(o, CDY CF, sizeof CDY - 1 + sizeof CF - 1);
+	}
 	while ((n = strchr(p, delim))) {
 		*n = '\0';
-		buf_putf(o, "\n%s", p);
+		dc = p;
+		if (flag & BUF_FORM_FL_DO_DECODE)
+			dc = url_decode_inplace(p, flag & BUF_FORM_FL_DECODE_PLUS);
+		buf_putf(o, "\n%s", dc);
 		p = n + 1;
 		while (*p == ' ')
 			p++; // Remove cookie space after ';'
@@ -200,7 +224,7 @@ buf_hot_form(struct buf *o, char *p, char delim, int is_hot) {
 	if (*p)
 		buf_putf(o, "\n%s", p); // remainder
 
-	if (is_hot && Opt_color)
+	if (is_color)
 		buf_put(o, CN, sizeof CN - 1);
 }
 
@@ -238,14 +262,21 @@ buf_hot(struct buf *o, char *p, int len, int is_hot) {
 
 	if (ip < endp) {
 		// Not printable
-		buf_put(o, "\n", 1);
+		if (Opt_color)
+			buf_putf(o, "\n"CDY""CF);
+		else
+			buf_put(o, "\n", 1);
 		buf_put_hex(o, p, MIN(len, DS_PAYLOAD_MAX_OUT / 4), 0);
 		if (len > DS_PAYLOAD_MAX_OUT / 4)
 			buf_putf(o, "  <...%d bytes omitted...>", len - DS_PAYLOAD_MAX_OUT / 4);
+		if (Opt_color)
+			buf_put(o, CN, sizeof CN - 1);
 		return;
 	}
 	if (is_hot && Opt_color) {
 		buf_putf(o, "\n"CDR"%s"CN, p);
+	} else if (Opt_color) {
+		buf_putf(o, "\n"CDY""CF"%s"CN, p);
 	} else
 		buf_putf(o, "\n%s", p);
 }
@@ -499,11 +530,14 @@ decode_http(u_char *buf, int len, u_char *obuf, int olen)
 				buf_putf(&outbuf, "\n"CDR"Cookie"CN": %s", cookie);
 			else
 				buf_putf(&outbuf, "\nCookie: %s", cookie);
-			// De-facto standard is to URL-encode cookies.
-			cookie = url_decode_inplace(cookie, 0);
+
+			// Decoded output:
 			if (Opt_color)
 				buf_put(&outbuf, CF, sizeof CF - 1);
-			buf_hot_form(&outbuf, cookie, ';', 0 /* not red */);
+			// De-facto standard is to URL-encode cookies.
+			buf_hot_form(&outbuf, cookie, ';', BUF_FORM_FL_NO_COLOR | BUF_FORM_FL_DECODE_PLUS | BUF_FORM_FL_DO_DECODE | BUF_FORM_FL_SKIP_SINGLE);
+			if (Opt_color)
+				buf_put(&outbuf, CN, sizeof CN - 1);
 
 			// Dont catch 'expires=<>' timer (limit to 64). FIXME: Should really disect the cookie and match for 'expires='
 			// Prevent Fuzzing from flooding our log => Use max of 19 dubdb-slots
@@ -532,7 +566,7 @@ decode_http(u_char *buf, int len, u_char *obuf, int olen)
 		if (location) {
 			// HERE: Location contains a GET query-string (after '?')
 			if (is_location_hot || Opt_verbose) {
-				buf_hot_form(&outbuf, url_decode_inplace(location, 1 /*decode plus to space */), '&', is_location_hot);
+				buf_hot_form(&outbuf, location, '&', BUF_FORM_FL_SKIP_SINGLE | BUF_FORM_FL_DO_DECODE | (is_location_hot?BUF_FORM_FL_IS_HOT:0));
 			}
 		}
 		if (is_gquery_hot || Opt_verbose) {
@@ -541,15 +575,14 @@ decode_http(u_char *buf, int len, u_char *obuf, int olen)
 					if (*str)
 						*str = '\0';
 			}
-			// It can happen that type is NOT x-www-form-urlencoded but still contains a query string.
 			if (is_form)
-				buf_hot_form(&outbuf, url_decode_inplace(gquery, 1 /*decode plus to space */), '&', is_gquery_hot);
+				buf_hot_form(&outbuf, gquery, '&', BUF_FORM_FL_DECODE_PLUS | BUF_FORM_FL_SKIP_SINGLE | BUF_FORM_FL_DO_DECODE | (is_gquery_hot?BUF_FORM_FL_IS_HOT:0));
 			else
-				buf_hot_form(&outbuf, gquery, '&', is_gquery_hot);
+				buf_hot_form(&outbuf, gquery, '&', BUF_FORM_FL_DECODE_PLUS | BUF_FORM_FL_SKIP_SINGLE | (is_gquery_hot?BUF_FORM_FL_IS_HOT:0)); // type NOT x-www-form-urlencoded but still contains a query string.
 		}
 		while (is_pquery_hot || Opt_verbose) {
 			if ((is_form) && (pquery && isprint(*pquery))) {
-				buf_hot_form(&outbuf, url_decode_inplace(pquery, 1 /*decode plus to space */), '&', is_pquery_hot);
+				buf_hot_form(&outbuf, gquery, '&', BUF_FORM_FL_DECODE_PLUS | BUF_FORM_FL_DO_DECODE | (is_pquery_hot?BUF_FORM_FL_IS_HOT:0));
 				break;
 			}
 			buf_hot(&outbuf, pquery, cont_len, is_pquery_hot);
