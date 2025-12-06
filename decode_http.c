@@ -156,30 +156,31 @@ grep_gquery_auth(char *buf)
 }
 
 // Used for AUTH requests only (directories, not files, are authorized)
-static char *
-http_req_dirname(char *req)
-{
-	char *uri, *vers;
+// 2025: Instead log the entire URL path so we see what was accessed.
+// static char *
+// http_req_dirname(char *req)
+// {
+// 	char *uri, *vers;
 	
-	if ((uri = strchr(req, ' ')) == NULL)
-		return (req);
+// 	if ((uri = strchr(req, ' ')) == NULL)
+// 		return (req);
 	
-	if ((vers = strrchr(uri, ' ')) == uri) {
-		vers = NULL;  // "GET /file"
-	} else if (vers[-1] == '/') {
-		return (req); // "GET /file/ HTTP/1.1"
-	} else
-		*vers++ = '\0'; // "GET /file HTTP/1.1"
+// 	if ((vers = strrchr(uri, ' ')) == uri) {
+// 		vers = NULL;  // "GET /file"
+// 	} else if (vers[-1] == '/') {
+// 		return (req); // "GET /file/ HTTP/1.1"
+// 	} else
+// 		*vers++ = '\0'; // "GET /file HTTP/1.1"
 	
-	strcpy(req, dirname(req));
-	strcat(req, "/");
+// 	strcpy(req, dirname(req));
+// 	strcat(req, "/");
 	
-	if (vers) {
-		strcat(req, " ");
-		strcat(req, vers);
-	}
-	return (req);
-}
+// 	if (vers) {
+// 		strcat(req, " ");
+// 		strcat(req, vers);
+// 	}
+// 	return (req);
+// }
 
 #define BUF_FORM_FL_IS_HOT	    0x01
 #define BUF_FORM_FL_DO_DECODE	0x02
@@ -459,10 +460,9 @@ decode_http(u_char *buf, int len, u_char *obuf, int olen)
 		if (buf_tell(&outbuf) > 0)
 			buf_putf(&outbuf, "\n");
 		
-		if (type[0] == 'G' && auth) {
-			req = http_req_dirname(req);
-		}
-
+		// if (type[0] == 'G' && auth) {
+		// 	req = http_req_dirname(req);
+		// }
 		if (Opt_color) {
 			if (gquery) {
 				*(gquery - 1) = '\0';
@@ -572,7 +572,7 @@ decode_http(u_char *buf, int len, u_char *obuf, int olen)
 		if (is_gquery_hot || Opt_verbose) {
 			if (gquery) {
 					char *str = strchr(gquery, ' ');
-					if (*str)
+					if (str && (*str))
 						*str = '\0';
 			}
 			if (is_form)

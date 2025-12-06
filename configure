@@ -1365,7 +1365,7 @@ Optional Packages:
   --with-libpcap=DIR      use libpcap in DIR
   --with-libnet=DIR       use libnet in DIR
   --with-libnids=DIR      use libnids in DIR
-  --with-openssl=DIR      use OpenSSL in DIR
+  --with-openssl=DIR or yes      use OpenSSL in DIR, or detect with pkg-config
 
 Some influential environment variables:
   CC          C compiler command
@@ -6987,57 +6987,49 @@ CPPFLAGS="$save_cppflags"
 
 
 
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for OpenSSL" >&5
-printf %s "checking for OpenSSL... " >&6; }
 
 # Check whether --with-openssl was given.
 if test ${with_openssl+y}
 then :
-  withval=$with_openssl;  case "$withval" in
-  yes|no)
+  withval=$with_openssl;
+else case e in #(
+  e) with_openssl=yes ;;
+esac
+fi
+
+
+case "x$with_openssl" in
+  xyes)
+     PKG_CHECK_MODULES(OPENSSL, libssl libcrypto, SSLINC="$OPENSSL_CFLAGS"; SSLLIB="$OPENSSL_LIBS"; WEBMITM="webmitm")
+     ;;
+  x|xno)
+     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for OpenSSL" >&5
+printf %s "checking for OpenSSL... " >&6; }
      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf "%s\n" "no" >&6; }
      ;;
   *)
-     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $withval" >&5
-printf "%s\n" "$withval" >&6; }
-     if test -f $withval/include/openssl/ssl.h -a -f $withval/libssl.a; then
+     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for OpenSSL" >&5
+printf %s "checking for OpenSSL... " >&6; }
+     if test -f $with_openssl/include/openssl/ssl.h -a -f $withval/libssl.a; then
         owd=`pwd`
-        if cd $withval; then withval=`pwd`; cd $owd; fi
-	SSLINC="-I$withval/include"
-	SSLLIB="-L$withval -lssl -lcrypto"
-     elif test -f $withval/include/openssl/ssl.h -a \
-	       -f $withval/lib/libssl.a; then
+        if cd $with_openssl; then withval=`pwd`; cd $owd; fi
+	SSLINC="-I$with_openssl/include"
+	SSLLIB="-L$with_openssl -lssl -lcrypto"
+     elif test -f $with_openssl/include/openssl/ssl.h -a \
+	       -f $with_openssl/lib/libssl.a; then
 	owd=`pwd`
-	if cd $withval; then withval=`pwd`; cd $owd; fi
-	SSLINC="-I$withval/include"
-	SSLLIB="-L$withval/lib -lssl -lcrypto"
+	if cd $with_openssl; then withval=`pwd`; cd $owd; fi
+	SSLINC="-I$with_openssl/include"
+	SSLLIB="-L$with_openssl/lib -lssl -lcrypto"
      else
-        as_fn_error $? "ssl.h or libssl.a not found in $withval" "$LINENO" 5
+        as_fn_error $? "ssl.h or libssl.a not found in $with_openssl" "$LINENO" 5
      fi
+     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $with_openssl" >&5
+printf "%s\n" "$with_openssl" >&6; }
      WEBMITM="webmitm"
      ;;
-  esac
-else case e in #(
-  e)  if test -f ${prefix}/include/openssl/ssl.h; then
-     SSLINC="-I${prefix}/include"
-     SSLLIB="-L${prefix}/lib -lssl -lcrypto"
-  elif test -f ${prefix}/ssl/include/openssl/ssl.h; then
-     SSLINC="-I${prefix}/ssl/include"
-     SSLLIB="-L${prefix}/ssl/lib -lssl -lcrypto"
-  elif test -f /usr/include/openssl/ssl.h; then
-     SSLLIB="-lssl -lcrypto"
-  else
-     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
-printf "%s\n" "no" >&6; }
-     as_fn_error $? "OpenSSL not found" "$LINENO" 5
-  fi
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-printf "%s\n" "yes" >&6; }
-
- ;;
 esac
-fi
 
 
 
