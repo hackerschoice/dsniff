@@ -1,4 +1,4 @@
-.TH DSNIFF 8
+.TH DSNIFF 8 "10 December 2025" "2.5" "Dsniff man page"
 .ad
 .fi
 .SH NAME
@@ -12,85 +12,86 @@ password sniffer
 \fBdsniff\fR [\fB-v\fR] [\fB-c\fR] [\fB-a\fR] [\fB-d\fR] [\fB-m\fR] [\fB-D\fR] [\fB-N\fR] [\fB-P\fR] [\fB-i
 \fIinterface\fR | \fB-p \fIpcapfile\fR] [\fB-s \fIsnaplen\fR] [\fB-M \fImagics\fR] [\fB-f \fIservices\fR]
 [\fB-t \fItrigger[,...]\fR]
-[\fB-r\fR|\fB-w\fR \fIsavefile\fR] [\fIexpression\fR]
+[\fIexpression\fR]
 .SH DESCRIPTION
 .ad
 .fi
-\fBdsniff\fR is a password sniffer which handles FTP, Telnet, SMTP,
-HTTP, POP, poppass, NNTP, IMAP, SNMP, LDAP, Rlogin, RIP, OSPF, PPTP
-MS-CHAP, NFS, VRRP, YP/NIS, SOCKS, X11, CVS, IRC, AIM, ICQ, Napster,
-PostgreSQL, Meeting Maker, Citrix ICA, Symantec pcAnywhere, NAI
-Sniffer, Microsoft SMB, Oracle SQL*Net, Sybase and Microsoft SQL
+\fBdsniff\fR is a password sniffer that handles FTP, Telnet, SMTP, HTTP, HTTPS,
+POP, poppass, NNTP, IMAP, SNMP, LDAP, Rlogin, RIP, OSPF, PPTP,
+MS-CHAP, NFS, VRRP, YP/NIS, SOCKS, X11, CVS, IRC,
+PostgreSQL, Meeting Maker, Citrix ICA, Microsoft SMB, Oracle SQL*Net, Sybase, and Microsoft SQL
 protocols.
 .LP
 \fBdsniff\fR automatically detects and minimally parses each
-application protocol, only saving the interesting bits, and uses
-Berkeley DB as its output file format, only logging unique
+application protocol, saving only the interesting bits, logging only unique
 authentication attempts. Full TCP/IP reassembly is provided by
 libnids(3).
 .LP
-I wrote \fBdsniff\fR with honest intentions - to audit my own network,
+I wrote \fBdsniff\fR with honest intentions—to audit my own network
 and to demonstrate the insecurity of cleartext network protocols.
 Please do not abuse this software.
 .SH OPTIONS
 .IP \fB-c\fR
-Perform half-duplex TCP stream reassembly, to handle asymmetrically
+Perform half-duplex TCP stream reassembly to handle asymmetrically
 routed traffic (such as when using arpspoof(8) to intercept client
 traffic bound for the local gateway).
 .IP \fB-v\fR
-Verbose. Show banners.
+Verbose mode. Show banners.
 .IP \fB-a\fR
-Show all results. Otherwise dsniff tries not to show to many duplicates.
+Show all results. Otherwise, dsniff attempts to suppress duplicate entries.
 .IP \fB-d\fR
 Enable debugging mode.
 .IP \fB-m\fR
-Force protocol detection/DPI also on known services. For example, -m will detect SSH _and_ HTTPS on port 443.
+Force protocol detection/DPI on known services. For example, \fB-m\fR will detect both SSH and HTTPS on port 443.
 .IP \fB-N\fR
 Resolve IP addresses to hostnames.
 .IP \fB-P\fR
-Enable promisc mode.
+Enable promiscuous mode.
 .IP \fB-C\fR
-Force color output even if not a tty.
+Force color output even if output is not a tty.
 .IP \fB-D\fR
 Disable DPI. Only decode known services (DPI is enabled by default on unknown ports).
 .IP "\fB-i \fIinterface\fR"
 Specify the interface to listen on.
 .IP "\fB-p \fIpcapfile\fR"
-Rather than processing the contents of packets observed upon the network 
-process the given PCAP capture file.
+Process the given PCAP capture file instead of packets observed on the network.
 .IP "\fB-s \fIsnaplen\fR"
 Analyze at most the first \fIsnaplen\fR bytes of each TCP connection,
 rather than the default of 1024.
 .IP "\fB-f \fIservices\fR"
-Load triggers from a \fIservices\fR file. Default is to use internal.
+Load triggers from a \fIservices\fR file. The default is to use the built-in list.
 .IP "\fB-M \fImagicfile\fR"
-Load \fImagics\fR from file. Default is to use internal. Can not be used with \fI-t\fR.
+Load magic signatures from a file. The default is to use the built-in list. Cannot be used with \fB-t\fR. Deep Packet Inspection (DPI) is based on Unix magic files. This feature can be used to selectively enable DPI. For example, to capture SSH banners on any port, use:
+.RS
+dsniff -M <(echo "0 string SSH-2.0- ssh")
+.RE
 .IP "\fB-t \fItrigger\fR[,...]"
 Load triggers from a comma-separated list, specified as
-\fIport\fR/\fIproto\fR=\fIservice\fR (e.g. 80/tcp=http).
-.IP "\fB-r \fIsavefile\fR"
-Read sniffed sessions from a \fIsavefile\fR created with the \fB-w\fR
-option.
-.IP "\fB-w \fIfile\fR"
-Write sniffed sessions to \fIsavefile\fR rather than parsing and
-printing them out.
+\fIport\fR/\fIproto\fR=\fIservice\fR (e.g., 80/tcp=http). Triggers set default decoders for well-known services. The default is to use the built-in list.
 .IP "\fIexpression\fR"
 Specify a tcpdump(8) filter expression to select traffic to sniff.
 .LP
-On a hangup signal \fBdsniff\fR will dump its current trigger table to
+On a SIGHUP signal, \fBdsniff\fR will dump its current trigger table to
 \fIdsniff.services\fR.
-.SH FILES
-.IP \fI/usr/share/dsniff/dsniff.services\fR
-Default trigger table
-.IP \fI/usr/share/dsniff/dsniff.magic\fR
-Network protocol magic
+.SH ENVIRONMENT
+The following environment variable can be set:
+.LP
+.B ENV_ARGS
+A string of command-line options. Using this variable hides the options from the process list:
+.RS
+# ENV_ARGS="-i eth0 -v" ./dsniff
+.RE
 .SH "SEE ALSO"
 arpspoof(8), libnids(3), services(5), magic(5)
 .SH AUTHOR
 .na
 .nf
 Dug Song <dugsong@monkey.org>
+Skyper <skyper@thc.org>
+.SH HISTORY
+\fBdsniff\fR was written by Dug Song in 2000. It is currently maintained by
+The Hacker's Choice (https://thc.org). It is available at https://github.com/hackerschoice/dsniff.
 .SH BUGS
 \fBdsniff\fR's automatic protocol detection feature is based on the
-classic file(1) command by Ian Darwin, and shares its historical
+classic file(1) command by Ian Darwin and shares its historical
 limitations and bugs.

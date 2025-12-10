@@ -571,6 +571,7 @@ decode_http(u_char *buf, int len, u_char *obuf, int olen)
 		}
 		if (is_gquery_hot || Opt_verbose) {
 			if (gquery) {
+					// Remove ' HTTP/1.1'
 					char *str = strchr(gquery, ' ');
 					if (str && (*str))
 						*str = '\0';
